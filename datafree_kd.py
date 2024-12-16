@@ -295,7 +295,7 @@ def main_worker(gpu, ngpus_per_node, args):
     #                                    map_location='cpu')['state_dict']
     # FIXME: path without ".."
     if args.dataset != 'imagenet':
-        teacher.load_state_dict(torch.load('../checkpoints/pretrained/%s_%s.pth' % (args.dataset, args.teacher),
+        teacher.load_state_dict(torch.load('./checkpoints/pretrained/%s_%s.pth' % (args.dataset, args.teacher),
                                            map_location='cpu')['state_dict'])
     student = prepare_model(student)
     teacher = prepare_model(teacher)
