@@ -74,7 +74,7 @@ parser.add_argument('--oht', default=3.0, type=float,
 
 # Basic
 # FIXME: path without ".."
-parser.add_argument('--data_root', default='../datasets/')
+parser.add_argument('--data_root', default='../cifar-10-batches-py/')
 parser.add_argument('--teacher', default='resnet34')
 parser.add_argument('--student', default='resnet18')
 parser.add_argument('--dataset', default='cifar10', choices=['cifar10', 'cifar100', 'tiny_imagenet', 'imagenet'])
@@ -198,7 +198,7 @@ def main_worker(gpu, ngpus_per_node, args):
     coefficients["main_loss_multiplier"] = args.main_loss_multiplier
     coefficients["adi_scale"] = args.adi_scale
 
-    
+
     ############################################
     # GPU and FP16
     ############################################
@@ -236,7 +236,7 @@ def main_worker(gpu, ngpus_per_node, args):
 
     name_project = 'datafree-%s/log-%s-%s-%s%s.txt' % (
     args.method, args.dataset, args.teacher, args.student, args.log_tag)
-    wandb.init(project="contrNAYER",
+    wandb.init(project="invNAYER",
                name=name_project,
                tags="t1",
                config=args.__dict__,
