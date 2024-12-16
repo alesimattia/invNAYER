@@ -436,7 +436,7 @@ def main_worker(gpu, ngpus_per_node, args):
             acc1 = acc5 = val_loss = 0
 
         args.logger.info('[Eval] Epoch={current_epoch} Acc@1={acc1:.4f} Acc@5={acc5:.4f} Loss={loss:.4f} Lr={lr:.4f} '
-                         'SL:{sl:.4f} OH:{oh:.4f} Contr:{contr:.4f} Cost:{co:.4f} Time:{tm:.4f}'.format(current_epoch=args.current_epoch, acc1=acc1,
+                         'SL:{sl:.4f} OH:{oh:.4f} Cost:{co:.4f} Time:{tm:.4f}'.format(current_epoch=args.current_epoch, acc1=acc1,
                                                                         acc5=acc5, loss=val_loss,
                                                                         lr=optimizer.param_groups[0]['lr'],
                                                                         sl=loss_synthesizer, oh=loss_oh,
