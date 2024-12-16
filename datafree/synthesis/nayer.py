@@ -220,7 +220,7 @@ class NAYER(BaseSynthesis):
 				else:
 					inputs_aug = self.aug(inputs)
 
-				if(self.contr != 0 | self.contr != None ): #Contrastive loss active
+				if(self.contr != 0 ): #Contrastive loss active
 					t_out = self.teacher(inputs)
 					t_out_aug = self.teacher(inputs_aug)
 					differences = torch.argmax(t_out, dim=1) != torch.argmax(t_out_aug, dim=1)
