@@ -179,7 +179,9 @@ class NAYER(BaseSynthesis):
 		self.teacher.eval()
 		best_cost = 1e6
 		best_oh = 1e6
-		best_contr = 1e6
+		best_loss_var_l1= 1e6
+		best_loss_var_l2 = 1e6
+		best_loss_l2 = 1e6
 
 		if (self.ep - self.ep_start) % self.g_life == 0 or self.ep % self.g_life == 0:
 			self.generator = self.generator.reinit()
@@ -234,6 +236,7 @@ class NAYER(BaseSynthesis):
 						num_differences = torch.sum(differences) # .item()
 						loss_contr = num_differences / t_out.size()[0]
 				else: #Standard Nayer
+					loss_contr = 0
 					t_out = self.teacher(inputs_aug)
 
 				loss_bn = sum([h.r_feature for h in self.hooks])
@@ -255,17 +258,21 @@ class NAYER(BaseSynthesis):
 				#################################################
 
 				# Combina "loss_bn", "loss_oh", "loss_adv" e "loss_aux" 
-				loss = self.bn * loss_bn + self.oh * loss_oh + self.adv * loss_adv + self.contr + loss_contr + loss_aux
+				loss = self.bn * loss_bn + self.oh * loss_oh + self.adv * loss_adv + self.contr * loss_contr + loss_aux
 
 				if loss_oh.item() < best_oh:
 					best_oh = loss_oh
-				if loss_contr.item() < best_contr:
-					best_contr = loss_contr
+				if loss_var_l1.item() < best_loss_var_l1:
+					best_loss_var_l1 = loss_var_l1
+				if loss_var_l2.item() < best_loss_var_l2:
+					best_loss_var_l2 = loss_var_l2
+				if loss_l2.item() < best_loss_l2:
+					best_loss_l2 = loss_l2
 
 				# print("%s - bn %s - bn %s - oh %s - adv %s" % (
 				# it, (loss_bn * self.bn).data, loss_bn.data, (loss_oh).data, (self.adv * loss_adv).data))
-				print("%s - bn %s - oh %s - contr %s - adv %s" % (
-				it, (loss_bn * self.bn).data, (loss_oh * self.oh).data, (self.contr * loss_contr).data, (self.adv * loss_adv).data))
+				print("%s - bn %s - oh %s - adv %s - var_l1 %s - var_l2 %s - l2 %s" % (
+				it, (loss_bn * self.bn).data, (loss_oh * self.oh).data, (self.adv * loss_adv).data), (self.coeff_var_l1 * loss_var_l1).data)
 
 				with torch.no_grad():
 					if best_cost > loss.item() or best_inputs is None:
@@ -298,7 +305,7 @@ class NAYER(BaseSynthesis):
 				dst, batch_size=self.sample_batch_size, shuffle=(train_sampler is None),
 				num_workers=self.num_workers, pin_memory=True, sampler=train_sampler)
 			self.data_iter = DataIter(loader)
-		return {"synthetic": bi_list}, end - start, best_cost, best_oh, best_contr
+		return {"synthetic": bi_list}, end - start, best_cost, best_oh, best_loss_var_l1, best_loss_var_l2, best_loss_l2
 
 	def sample(self):
 		return self.data_iter.next()
