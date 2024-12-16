@@ -26,7 +26,16 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import wandb
 
-parser = argparse.ArgumentParser(description=' Contrastive Data-free Knowledge Distillation')
+parser = argparse.ArgumentParser(description='Inversion loss NAYER')
+
+# Da "imagenet_inversion.py" coefficient per loss_aux
+parser.add_argument('--tv_l1', type=float, default=0.0, help='coefficient for total variation L1 loss')
+parser.add_argument('--tv_l2', type=float, default=0.0001, help='coefficient for total variation L2 loss')
+parser.add_argument('--r_feature', type=float, default=0.05, help='coefficient for feature distribution regularization')
+parser.add_argument('--first_bn_multiplier', type=float, default=10., help='additional multiplier on first bn layer of R_feature')
+parser.add_argument('--l2', type=float, default=0.00001, help='l2 loss on the image')
+parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coefficient for the main loss in optimization')
+parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
 
 # Data Free
 parser.add_argument('--method', default='nldf')
@@ -131,7 +140,7 @@ parser.add_argument('-p', '--print_freq', default=0, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('--pretrained', dest='pretrained', action='store_true',
                     help='use pre-trained model')
-parser.add_argument('--wandb', default='online', type=str)
+parser.add_argument('--wandb', default='offline', type=str)
 
 best_acc1 = 0
 time_cost = 0

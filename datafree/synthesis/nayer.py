@@ -17,338 +17,386 @@ import time
 
 
 def reptile_grad(src, tar):
-    for p, tar_p in zip(src.parameters(), tar.parameters()):
-        if p.grad is None:
-            p.grad = Variable(torch.zeros(p.size())).cuda()
-        p.grad.data.add_(p.data - tar_p.data, alpha=67)  # , alpha=40
+	for p, tar_p in zip(src.parameters(), tar.parameters()):
+		if p.grad is None:
+			p.grad = Variable(torch.zeros(p.size())).cuda()
+		p.grad.data.add_(p.data - tar_p.data, alpha=67)  # , alpha=40
 
 
 def fomaml_grad(src, tar):
-    for p, tar_p in zip(src.parameters(), tar.parameters()):
-        if p.grad is None:
-            p.grad = Variable(torch.zeros(p.size())).cuda()
-        p.grad.data.add_(tar_p.grad.data)  # , alpha=0.67
+	for p, tar_p in zip(src.parameters(), tar.parameters()):
+		if p.grad is None:
+			p.grad = Variable(torch.zeros(p.size())).cuda()
+		p.grad.data.add_(tar_p.grad.data)  # , alpha=0.67
 
 
 def reset_l0(model):
-    for n, m in model.named_modules():
-        if n == "l1.0" or n == "conv_blocks.0":
-            nn.init.normal_(m.weight, 0.0, 0.02)
-            nn.init.constant_(m.bias, 0)
+	for n, m in model.named_modules():
+		if n == "l1.0" or n == "conv_blocks.0":
+			nn.init.normal_(m.weight, 0.0, 0.02)
+			nn.init.constant_(m.bias, 0)
 
 def reset_g(model):
-    for m in model.modules():
-        if isinstance(m, (nn.Conv2d)):
-            nn.init.xavier_uniform_(m.weight)
-        if isinstance(m, (nn.BatchNorm2d)):
-            nn.init.normal_(m.weight, 1.0, 0.02)
-            nn.init.constant_(m.bias, 0)
-        if isinstance(m, (nn.Linear)):
-            nn.init.normal_(m.weight, mean=0, std=1)
-            nn.init.constant_(m.bias, 0)
+	for m in model.modules():
+		if isinstance(m, (nn.Conv2d)):
+			nn.init.xavier_uniform_(m.weight)
+		if isinstance(m, (nn.BatchNorm2d)):
+			nn.init.normal_(m.weight, 1.0, 0.02)
+			nn.init.constant_(m.bias, 0)
+		if isinstance(m, (nn.Linear)):
+			nn.init.normal_(m.weight, mean=0, std=1)
+			nn.init.constant_(m.bias, 0)
 
 
 def reset_g1(model):
-    for m in model.modules():
-        if isinstance(m, (nn.Conv2d)):
-            nn.init.xavier_uniform_(m.weight)
-        if isinstance(m, (nn.Linear)):
-            nn.init.normal_(m.weight, mean=0, std=1)
-            nn.init.constant_(m.bias, 0)
+	for m in model.modules():
+		if isinstance(m, (nn.Conv2d)):
+			nn.init.xavier_uniform_(m.weight)
+		if isinstance(m, (nn.Linear)):
+			nn.init.normal_(m.weight, mean=0, std=1)
+			nn.init.constant_(m.bias, 0)
 
 
 def reset_bn(model):
-    for m in model.modules():
-        if isinstance(m, (nn.BatchNorm2d)):
-            nn.init.normal_(m.weight, 1.0, 0.02)
-            nn.init.constant_(m.bias, 0)
+	for m in model.modules():
+		if isinstance(m, (nn.BatchNorm2d)):
+			nn.init.normal_(m.weight, 1.0, 0.02)
+			nn.init.constant_(m.bias, 0)
 
 
 def custom_cross_entropy(preds, target):
-    return torch.mean(torch.sum(-target * preds.log_softmax(dim=-1), dim=-1))
+	return torch.mean(torch.sum(-target * preds.log_softmax(dim=-1), dim=-1))
+
+
+### Integrazione da imagenet_inversion.py
+coefficients = dict()
+coefficients["r_feature"] = args.r_feature
+coefficients["first_bn_multiplier"] = args.first_bn_multiplier
+coefficients["tv_l1"] = args.tv_l1
+coefficients["tv_l2"] = args.tv_l2
+coefficients["l2"] = args.l2
+coefficients["lr"] = args.lr
+coefficients["main_loss_multiplier"] = args.main_loss_multiplier
+coefficients["adi_scale"] = args.adi_scale
+
+def get_image_prior_losses(inputs_jit):
+		# Perdita di variazione totale
+		diff1 = inputs_jit[:, :, :, :-1] - inputs_jit[:, :, :, 1:]
+		diff2 = inputs_jit[:, :, :-1, :] - inputs_jit[:, :, 1:, :]
+		diff3 = inputs_jit[:, :, 1:, :-1] - inputs_jit[:, :, :-1, 1:]
+		diff4 = inputs_jit[:, :, :-1, :-1] - inputs_jit[:, :, 1:, 1:]
+
+		loss_var_l2 = torch.norm(diff1) + torch.norm(diff2) + torch.norm(diff3) + torch.norm(diff4)
+		loss_var_l1 = (diff1.abs() / 255.0).mean() + (diff2.abs() / 255.0).mean() + (
+				diff3.abs() / 255.0).mean() + (diff4.abs() / 255.0).mean()
+		loss_var_l1 = loss_var_l1 * 255.0
+		return loss_var_l1, loss_var_l2
 
 
 class NAYER(BaseSynthesis):
-    def __init__(self, teacher, student, generator, num_classes, img_size,
-                 init_dataset=None, g_steps=100, lr_g=0.1,
-                 synthesis_batch_size=128, sample_batch_size=128,
-                 adv=0.0, bn=1, oh=1, num_workers=4, contr=1,
-                 save_dir='run/fast', transform=None, autocast=None, use_fp16=False,
-                 normalizer=None, device='cpu', distributed=False,
-                 warmup=10, bn_mmt=0, bnt=30, oht=1.5,
-                 cr_loop=1, g_life=50, g_loops=1, gwp_loops=10, dataset="cifar10"):
-        super(NAYER, self).__init__(teacher, student)
-        self.save_dir = save_dir
-        self.img_size = img_size
-        self.g_steps = g_steps
+	def __init__(self, teacher, student, generator, num_classes, img_size,
+				 init_dataset=None, g_steps=100, lr_g=0.1,
+				 synthesis_batch_size=128, sample_batch_size=128,
+				 adv=0.0, bn=1, oh=1, num_workers=4, contr=1,
+				 save_dir='run/fast', transform=None, autocast=None, use_fp16=False,
+				 normalizer=None, device='cpu', distributed=False,
+				 warmup=10, bn_mmt=0, bnt=30, oht=1.5,
+				 cr_loop=1, g_life=50, g_loops=1, gwp_loops=10, dataset="cifar10"):
+		super(NAYER, self).__init__(teacher, student)
 
-        self.lr_g = lr_g
-        self.adv = adv
-        self.bn = bn
-        self.oh = oh
-        self.contr = contr
-        self.bn_mmt = bn_mmt
-        self.num_workers = num_workers
+		if "r_feature" in coefficients:
+			self.bn_reg_scale = coefficients["r_feature"]
+			self.first_bn_multiplier = coefficients["first_bn_multiplier"]
+			self.coeff_var_l1 = coefficients["tv_l1"]
+			self.coeff_var_l2 = coefficients["tv_l2"]
+			self.coeff_l2 = coefficients["l2"]
+			self.lr = coefficients["lr"]
+			self.main_loss_multiplier = coefficients["main_loss_multiplier"]
+			self.adi_scale = coefficients["adi_scale"]
+		else:
+			print("Dict. r_feature incompleto")
+			
+		self.save_dir = save_dir
+		self.img_size = img_size
+		self.g_steps = g_steps
 
-        self.num_classes = num_classes
-        self.distributed = distributed
-        self.synthesis_batch_size = int(synthesis_batch_size/cr_loop)
-        self.sample_batch_size = sample_batch_size
-        self.init_dataset = init_dataset
-        self.use_fp16 = use_fp16
-        self.autocast = autocast  # for FP16
-        self.normalizer = normalizer
-        self.data_pool = ImagePool(root=self.save_dir)
-        self.transform = transform
-        self.data_iter = None
-        self.generator = generator.to(device).train()
-        self.device = device
-        self.hooks = []
+		self.lr_g = lr_g
+		self.adv = adv
+		self.bn = bn
+		self.oh = oh
+		self.contr = contr
+		self.bn_mmt = bn_mmt
+		self.num_workers = num_workers
 
-        self.ep = 0
-        self.ep_start = warmup
+		self.num_classes = num_classes
+		self.distributed = distributed
+		self.synthesis_batch_size = int(synthesis_batch_size/cr_loop)
+		self.sample_batch_size = sample_batch_size
+		self.init_dataset = init_dataset
+		self.use_fp16 = use_fp16
+		self.autocast = autocast  # for FP16
+		self.normalizer = normalizer
+		self.data_pool = ImagePool(root=self.save_dir)
+		self.transform = transform
+		self.data_iter = None
+		self.generator = generator.to(device).train()
+		self.device = device
+		self.hooks = []
 
-        self.g_life = g_life
-        self.bnt = bnt
-        self.oht = oht
-        self.g_loops = g_loops
-        self.gwp_loops = gwp_loops
-        self.dataset = dataset
-        self.label_list = torch.LongTensor([i for i in range(self.num_classes)])
+		self.ep = 0
+		self.ep_start = warmup
 
-        for m in teacher.modules():
-            if isinstance(m, nn.BatchNorm2d):
-                self.hooks.append(DeepInversionHook(m, self.bn_mmt))
+		self.g_life = g_life
+		self.bnt = bnt
+		self.oht = oht
+		self.g_loops = g_loops
+		self.gwp_loops = gwp_loops
+		self.dataset = dataset
+		self.label_list = torch.LongTensor([i for i in range(self.num_classes)])
 
-        if dataset == "imagenet" or dataset == "tiny_imagenet":
-            self.aug = transforms.Compose([
-                augmentation.RandomCrop(size=[self.img_size[-2], self.img_size[-1]], padding=4),
-                normalizer,
-            ])
-        else:
-            self.aug = transforms.Compose([
-                augmentation.RandomCrop(size=[self.img_size[-2], self.img_size[-1]], padding=4, p=0.5),
-                augmentation.RandomHorizontalFlip(),
-                augmentation.RandomRotation(degrees=20),
-                augmentation.ColorJitter(0.2, 0.1, 0.1, 0.1, p=0.5),
-                normalizer,
-            ])
+		for m in teacher.modules():
+			if isinstance(m, nn.BatchNorm2d):
+				self.hooks.append(DeepInversionHook(m, self.bn_mmt))
 
-    def jitter_and_flip(self, inputs_jit, lim=1. / 8., do_flip=True):
-        lim_0, lim_1 = int(inputs_jit.shape[-2] * lim), int(inputs_jit.shape[-1] * lim)
+		if dataset == "imagenet" or dataset == "tiny_imagenet":
+			self.aug = transforms.Compose([
+				augmentation.RandomCrop(size=[self.img_size[-2], self.img_size[-1]], padding=4),
+				normalizer,
+			])
+		else:
+			self.aug = transforms.Compose([
+				augmentation.RandomCrop(size=[self.img_size[-2], self.img_size[-1]], padding=4, p=0.5),
+				augmentation.RandomHorizontalFlip(),
+				normalizer
+			])
 
-        # apply random jitter offsets
-        off1 = random.randint(-lim_0, lim_0)
-        off2 = random.randint(-lim_1, lim_1)
-        inputs_jit = torch.roll(inputs_jit, shifts=(off1, off2), dims=(2, 3))
+	def jitter_and_flip(self, inputs_jit, lim=1. / 8., do_flip=True):
+		lim_0, lim_1 = int(inputs_jit.shape[-2] * lim), int(inputs_jit.shape[-1] * lim)
 
-        # Flipping
-        flip = random.random() > 0.5
-        if flip and do_flip:
-            inputs_jit = torch.flip(inputs_jit, dims=(3,))
-        return inputs_jit
+		# apply random jitter offsets
+		off1 = random.randint(-lim_0, lim_0)
+		off2 = random.randint(-lim_1, lim_1)
+		inputs_jit = torch.roll(inputs_jit, shifts=(off1, off2), dims=(2, 3))
 
-    def synthesize(self, targets=None):
-        start = time.time()
-        self.student.eval()
-        self.teacher.eval()
-        best_cost = 1e6
-        best_oh = 1e6
-        best_contr = 1e6
+		# Flipping
+		flip = random.random() > 0.5
+		if flip and do_flip:
+			inputs_jit = torch.flip(inputs_jit, dims=(3,))
+		return inputs_jit
 
-        if (self.ep - self.ep_start) % self.g_life == 0 or self.ep % self.g_life == 0:
-            self.generator = self.generator.reinit()
+	def synthesize(self, targets=None):
+		start = time.time()
+		self.student.eval()
+		self.teacher.eval()
+		best_cost = 1e6
+		best_oh = 1e6
+		best_contr = 1e6
 
-        if self.ep < self.ep_start:
-            g_loops = self.gwp_loops
-        else:
-            g_loops = self.g_loops
-        self.ep += 1
-        bi_list = []
-        if g_loops == 0:
-            return None, 0, 0, 0
-        if self.dataset == "imagenet":
-            idx = torch.randperm(self.label_list.shape[0])
-            self.label_list = self.label_list[idx]
-        for gs in range(g_loops):
-            best_inputs = None
-            self.generator.re_init_le()
+		if (self.ep - self.ep_start) % self.g_life == 0 or self.ep % self.g_life == 0:
+			self.generator = self.generator.reinit()
 
-            if self.dataset == "imagenet":
-                targets, ys = self.generate_ys_in(cr=0.0, i=gs)
-                print(targets)
-            else:
-                targets, ys = self.generate_ys(cr=0.0)
-            ys = ys.to(self.device)
-            targets = targets.to(self.device)
+		if self.ep < self.ep_start:
+			g_loops = self.gwp_loops
+		else:
+			g_loops = self.g_loops
+		self.ep += 1
+		bi_list = []
+		if g_loops == 0:
+			return None, 0, 0, 0
+		if self.dataset == "imagenet":
+			idx = torch.randperm(self.label_list.shape[0])
+			self.label_list = self.label_list[idx]
+		for gs in range(g_loops):
+			best_inputs = None
+			self.generator.re_init_le()
 
-            optimizer = torch.optim.Adam([
-                {'params': self.generator.parameters()},
-            ], lr=self.lr_g, betas=[0.5, 0.999])
+			if self.dataset == "imagenet":
+				targets, ys = self.generate_ys_in(cr=0.0, i=gs)
+				print(targets)
+			else:
+				targets, ys = self.generate_ys(cr=0.0)
+			ys = ys.to(self.device)
+			targets = targets.to(self.device)
 
-            for it in range(self.g_steps):
-                inputs = self.generator(targets=targets)
-                if self.dataset == "imagenet":
-                    inputs = self.jitter_and_flip(inputs)
-                    inputs_aug = self.aug(inputs)
-                else:
-                    inputs_aug = self.aug(inputs)
+			optimizer = torch.optim.Adam([
+				{'params': self.generator.parameters()},
+			], lr=self.lr_g, betas=[0.5, 0.999])
 
-                t_out = self.teacher(inputs)
-                t_out_aug = self.teacher(inputs_aug)
-                differences = torch.argmax(t_out, dim=1) != torch.argmax(t_out_aug, dim=1)
-                if torch.sum(differences).item() == 0:
-                    t_out = t_out_aug
-                else:
-                    # I want G to synthesize samples that produce the same response on T regardless of the augmentation
-                    # TODO: can semantics (inter-class similarities) be useful here?
-                    # TODO: check if self.aug is used during T training. the end-user cannot know what augmentations were used   
-                    # add a loss term that penalizes G in this case
-                    num_differences = torch.sum(differences) # .item()
-                    loss_contr = num_differences / t_out.size()[0]
+			# Adeguamento per contrastive loss
+			for it in range(self.g_steps):
+				inputs = self.generator(targets=targets)
+				if self.dataset == "imagenet":
+					inputs = self.jitter_and_flip(inputs)
+					inputs_aug = self.aug(inputs)
+				else:
+					inputs_aug = self.aug(inputs)
 
-                loss_bn = sum([h.r_feature for h in self.hooks])
-                loss_oh = custom_cross_entropy(t_out, ys.detach())
+				if(self.contr != 0 | self.contr != None ): #Contrastive loss active
+					t_out = self.teacher(inputs)
+					t_out_aug = self.teacher(inputs_aug)
+					differences = torch.argmax(t_out, dim=1) != torch.argmax(t_out_aug, dim=1)
+					if torch.sum(differences).item() == 0:
+						t_out = t_out_aug
+					else:
+						# I want G to synthesize samples that produce the same response on T regardless of the augmentation
+						# TODO: can semantics (inter-class similarities) be useful here?
+						# TODO: check if self.aug is used during T training. the end-user cannot know what augmentations were used   
+						# add a loss term that penalizes G in this case
+						num_differences = torch.sum(differences) # .item()
+						loss_contr = num_differences / t_out.size()[0]
+				else: #Standard Nayer
+					t_out = self.teacher(inputs_aug)
 
-                if self.adv > 0 and (self.ep > self.ep_start):
-                    s_out = self.student(inputs_aug)
-                    mask = (s_out.max(1)[1] == t_out.max(1)[1]).float()
-                    loss_adv = -(kldiv(s_out, t_out, reduction='none').sum(
-                        1) * mask).mean()  # decision adversarial distillation
-                else:
-                    loss_adv = loss_oh.new_zeros(1)
+				loss_bn = sum([h.r_feature for h in self.hooks])
+				loss_oh = custom_cross_entropy(t_out, ys.detach())
 
-                loss = self.bn * loss_bn + self.oh * loss_oh + self.adv * loss_adv + self.contr + loss_contr
+				if self.adv > 0 and (self.ep > self.ep_start):
+					s_out = self.student(inputs_aug)
+					mask = (s_out.max(1)[1] == t_out.max(1)[1]).float()
+					loss_adv = -(kldiv(s_out, t_out, reduction='none').sum(
+						1) * mask).mean()  # decision adversarial distillation
+				else:
+					loss_adv = loss_oh.new_zeros(1)
 
-                if loss_oh.item() < best_oh:
-                    best_oh = loss_oh
-                if loss_contr.item() < best_contr:
-                    best_contr = loss_contr
+				######### Calcolo componente "loss_aux" ########
+				loss_var_l1, loss_var_l2 = get_image_prior_losses(inputs_aug)
+				loss_l2 = torch.norm(inputs_aug.view(inputs_aug.size(0), -1), dim=1).mean()
 
-                # print("%s - bn %s - bn %s - oh %s - adv %s" % (
-                # it, (loss_bn * self.bn).data, loss_bn.data, (loss_oh).data, (self.adv * loss_adv).data))
-                print("%s - bn %s - oh %s - contr %s - adv %s" % (
-                it, (loss_bn * self.bn).data, (loss_oh * self.oh).data, (self.contr * loss_contr).data, (self.adv * loss_adv).data))
+				loss_aux = self.coeff_var_l1 * loss_var_l1 + self.coeff_var_l2 * loss_var_l2 + self.coeff_l2 * loss_l2
+				#################################################
 
-                with torch.no_grad():
-                    if best_cost > loss.item() or best_inputs is None:
-                        best_cost = loss.item()
-                        best_inputs = inputs.data
+				# Combina "loss_bn", "loss_oh", "loss_adv" e "loss_aux" 
+				loss = self.bn * loss_bn + self.oh * loss_oh + self.adv * loss_adv + self.contr + loss_contr + loss_aux
 
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
+				if loss_oh.item() < best_oh:
+					best_oh = loss_oh
+				if loss_contr.item() < best_contr:
+					best_contr = loss_contr
 
-            if self.bn_mmt != 0:
-                for h in self.hooks:
-                    h.update_mmt()
+				# print("%s - bn %s - bn %s - oh %s - adv %s" % (
+				# it, (loss_bn * self.bn).data, loss_bn.data, (loss_oh).data, (self.adv * loss_adv).data))
+				print("%s - bn %s - oh %s - contr %s - adv %s" % (
+				it, (loss_bn * self.bn).data, (loss_oh * self.oh).data, (self.contr * loss_contr).data, (self.adv * loss_adv).data))
 
-            self.student.train()
-            end = time.time()
+				with torch.no_grad():
+					if best_cost > loss.item() or best_inputs is None:
+						best_cost = loss.item()
+						best_inputs = inputs.data
 
-            self.data_pool.add(best_inputs)
-            bi_list.append(best_inputs)
+				optimizer.zero_grad()
+				loss.backward()
+				optimizer.step()
 
-            dst = self.data_pool.get_dataset(transform=self.transform)
-            if self.init_dataset is not None:
-                init_dst = datafree.utils.UnlabeledImageDataset(self.init_dataset, transform=self.transform)
-                dst = torch.utils.data.ConcatDataset([dst, init_dst])
-            if self.distributed:
-                train_sampler = torch.utils.data.distributed.DistributedSampler(dst)
-            else:
-                train_sampler = None
-            loader = torch.utils.data.DataLoader(
-                dst, batch_size=self.sample_batch_size, shuffle=(train_sampler is None),
-                num_workers=self.num_workers, pin_memory=True, sampler=train_sampler)
-            self.data_iter = DataIter(loader)
-        return {"synthetic": bi_list}, end - start, best_cost, best_oh, best_contr
+			if self.bn_mmt != 0:
+				for h in self.hooks:
+					h.update_mmt()
 
-    def sample(self):
-        return self.data_iter.next()
+			self.student.train()
+			end = time.time()
 
-    def generate_ys_in(self, cr=0.0, i=0):
-        target = self.label_list[i*self.synthesis_batch_size:(i+1)*self.synthesis_batch_size]
-        target = torch.tensor([250, 230, 283, 282, 726, 895, 554, 555, 105, 107])
+			self.data_pool.add(best_inputs)
+			bi_list.append(best_inputs)
 
+			dst = self.data_pool.get_dataset(transform=self.transform)
+			if self.init_dataset is not None:
+				init_dst = datafree.utils.UnlabeledImageDataset(self.init_dataset, transform=self.transform)
+				dst = torch.utils.data.ConcatDataset([dst, init_dst])
+			if self.distributed:
+				train_sampler = torch.utils.data.distributed.DistributedSampler(dst)
+			else:
+				train_sampler = None
+			loader = torch.utils.data.DataLoader(
+				dst, batch_size=self.sample_batch_size, shuffle=(train_sampler is None),
+				num_workers=self.num_workers, pin_memory=True, sampler=train_sampler)
+			self.data_iter = DataIter(loader)
+		return {"synthetic": bi_list}, end - start, best_cost, best_oh, best_contr
 
-        ys = torch.zeros(self.synthesis_batch_size, self.num_classes)
-        ys.fill_(cr / (self.num_classes - 1))
-        ys.scatter_(1, target.data.unsqueeze(1), (1 - cr))
+	def sample(self):
+		return self.data_iter.next()
 
-        return target, ys
-
-    def generate_ys(self, cr=0.0):
-        s = self.synthesis_batch_size // self.num_classes
-        v = self.synthesis_batch_size % self.num_classes
-        target = torch.randint(self.num_classes, (v,))
-        for i in range(s):
-            tmp_label = torch.tensor(range(0, self.num_classes))
-            target = torch.cat((tmp_label, target))
-
-        ys = torch.zeros(self.synthesis_batch_size, self.num_classes)
-        ys.fill_(cr / (self.num_classes - 1))
-        ys.scatter_(1, target.data.unsqueeze(1), (1 - cr))
-        print(target)
-
-        return target, ys
-
-    def generate_lys(self, cr=0.0, value=3):
-        s = self.synthesis_batch_size // self.num_classes
-        v = self.synthesis_batch_size % self.num_classes
-        target = torch.randint(self.num_classes, (v,))
-        for i in range(s):
-            tmp_label = torch.tensor(range(0, self.num_classes))
-            target = torch.cat((tmp_label, target))
-
-        yf = torch.zeros(self.synthesis_batch_size, self.num_classes)
-        yf.scatter_(1, target.data.unsqueeze(1), (1 - cr))
-        yf = yf.to(device=self.device)
-
-        yl = torch.ones(self.synthesis_batch_size, self.num_classes)*(-value)
-        yl.scatter_(1, target.data.unsqueeze(1), value)
-        yl = yl.to(device=self.device)
-
-        cr_vec = torch.ones(size=(self.synthesis_batch_size, self.num_classes), device=self.device)*cr
-
-        return target, yf, yl, cr_vec
+	def generate_ys_in(self, cr=0.0, i=0):
+		target = self.label_list[i*self.synthesis_batch_size:(i+1)*self.synthesis_batch_size]
+		target = torch.tensor([250, 230, 283, 282, 726, 895, 554, 555, 105, 107])
 
 
-    def generate_lys_v2(self, cr=0.0, value=3, norm=50):
-        s = self.synthesis_batch_size // self.num_classes
-        v = self.synthesis_batch_size % self.num_classes
-        target = torch.randint(self.num_classes, (v,))
-        crate = random.randint(0, int(cr*norm))/norm
-        for i in range(s):
-            tmp_label = torch.tensor(range(0, self.num_classes))
-            target = torch.cat((tmp_label, target))
+		ys = torch.zeros(self.synthesis_batch_size, self.num_classes)
+		ys.fill_(cr / (self.num_classes - 1))
+		ys.scatter_(1, target.data.unsqueeze(1), (1 - cr))
 
-        yf = torch.zeros(self.synthesis_batch_size, self.num_classes)
-        yf.scatter_(1, target.data.unsqueeze(1), (1 - crate))
-        yf = yf.to(device=self.device)
+		return target, ys
 
-        yl = torch.ones(self.synthesis_batch_size, self.num_classes)*(-value)
-        yl.scatter_(1, target.data.unsqueeze(1), value)
-        yl = yl.to(device=self.device)
+	def generate_ys(self, cr=0.0):
+		s = self.synthesis_batch_size // self.num_classes
+		v = self.synthesis_batch_size % self.num_classes
+		target = torch.randint(self.num_classes, (v,))
+		for i in range(s):
+			tmp_label = torch.tensor(range(0, self.num_classes))
+			target = torch.cat((tmp_label, target))
 
-        cr_vec = torch.ones(size=(self.synthesis_batch_size, self.num_classes), device=self.device)*crate
+		ys = torch.zeros(self.synthesis_batch_size, self.num_classes)
+		ys.fill_(cr / (self.num_classes - 1))
+		ys.scatter_(1, target.data.unsqueeze(1), (1 - cr))
+		print(target)
 
-        return target, yf, yl, cr_vec
+		return target, ys
+
+	def generate_lys(self, cr=0.0, value=3):
+		s = self.synthesis_batch_size // self.num_classes
+		v = self.synthesis_batch_size % self.num_classes
+		target = torch.randint(self.num_classes, (v,))
+		for i in range(s):
+			tmp_label = torch.tensor(range(0, self.num_classes))
+			target = torch.cat((tmp_label, target))
+
+		yf = torch.zeros(self.synthesis_batch_size, self.num_classes)
+		yf.scatter_(1, target.data.unsqueeze(1), (1 - cr))
+		yf = yf.to(device=self.device)
+
+		yl = torch.ones(self.synthesis_batch_size, self.num_classes)*(-value)
+		yl.scatter_(1, target.data.unsqueeze(1), value)
+		yl = yl.to(device=self.device)
+
+		cr_vec = torch.ones(size=(self.synthesis_batch_size, self.num_classes), device=self.device)*cr
+
+		return target, yf, yl, cr_vec
 
 
-    def generate_lys_v3(self, cr=0.0):
-        s = self.synthesis_batch_size // self.num_classes
-        v = self.synthesis_batch_size % self.num_classes
-        target = torch.randint(self.num_classes, (v,))
-        for i in range(s):
-            tmp_label = torch.tensor(range(0, self.num_classes))
-            target = torch.cat((tmp_label, target))
+	def generate_lys_v2(self, cr=0.0, value=3, norm=50):
+		s = self.synthesis_batch_size // self.num_classes
+		v = self.synthesis_batch_size % self.num_classes
+		target = torch.randint(self.num_classes, (v,))
+		crate = random.randint(0, int(cr*norm))/norm
+		for i in range(s):
+			tmp_label = torch.tensor(range(0, self.num_classes))
+			target = torch.cat((tmp_label, target))
 
-        yf = torch.zeros(self.synthesis_batch_size, self.num_classes)
-        yf.scatter_(1, target.data.unsqueeze(1), (1 - cr))
+		yf = torch.zeros(self.synthesis_batch_size, self.num_classes)
+		yf.scatter_(1, target.data.unsqueeze(1), (1 - crate))
+		yf = yf.to(device=self.device)
 
-        yf = yf.to(device=self.device)
+		yl = torch.ones(self.synthesis_batch_size, self.num_classes)*(-value)
+		yl.scatter_(1, target.data.unsqueeze(1), value)
+		yl = yl.to(device=self.device)
 
-        yl = torch.zeros(size=(self.synthesis_batch_size, self.num_classes), device=self.device)
-        cr_vec = torch.ones(size=(self.synthesis_batch_size, self.num_classes), device=self.device)*cr
+		cr_vec = torch.ones(size=(self.synthesis_batch_size, self.num_classes), device=self.device)*crate
 
-        return target, yf, yl, cr_vec
+		return target, yf, yl, cr_vec
+
+
+	def generate_lys_v3(self, cr=0.0):
+		s = self.synthesis_batch_size // self.num_classes
+		v = self.synthesis_batch_size % self.num_classes
+		target = torch.randint(self.num_classes, (v,))
+		for i in range(s):
+			tmp_label = torch.tensor(range(0, self.num_classes))
+			target = torch.cat((tmp_label, target))
+
+		yf = torch.zeros(self.synthesis_batch_size, self.num_classes)
+		yf.scatter_(1, target.data.unsqueeze(1), (1 - cr))
+
+		yf = yf.to(device=self.device)
+
+		yl = torch.zeros(size=(self.synthesis_batch_size, self.num_classes), device=self.device)
+		cr_vec = torch.ones(size=(self.synthesis_batch_size, self.num_classes), device=self.device)*cr
+
+		return target, yf, yl, cr_vec

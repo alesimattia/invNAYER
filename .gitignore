@@ -4,4 +4,4 @@ output.log
 wandb-metadata.json
 config.yaml
 copy_wandb_run.py
-.gitignore
+.DS_Store
