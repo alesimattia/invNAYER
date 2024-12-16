@@ -74,7 +74,7 @@ parser.add_argument('--oht', default=3.0, type=float,
 
 # Basic
 # FIXME: path without ".."
-parser.add_argument('--data_root', default='../cifar-10-batches-py/')
+parser.add_argument('--data_root', default='../')
 parser.add_argument('--teacher', default='resnet34')
 parser.add_argument('--student', default='resnet18')
 parser.add_argument('--dataset', default='cifar10', choices=['cifar10', 'cifar100', 'tiny_imagenet', 'imagenet'])
