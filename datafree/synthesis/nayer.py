@@ -272,7 +272,8 @@ class NAYER(BaseSynthesis):
 				# print("%s - bn %s - bn %s - oh %s - adv %s" % (
 				# it, (loss_bn * self.bn).data, loss_bn.data, (loss_oh).data, (self.adv * loss_adv).data))
 				print("%s - bn %s - oh %s - adv %s - var_l1 %s - var_l2 %s - l2 %s" % (
-				it, (loss_bn * self.bn).data, (loss_oh * self.oh).data, (self.adv * loss_adv).data), (self.coeff_var_l1 * loss_var_l1).data, (self.coeff_var_l2 * loss_var_l2).data, (self.coeff_l2 * loss_l2).data)
+				it, (loss_bn * self.bn).data, (loss_oh * self.oh).data, (self.adv * loss_adv).data, 
+				(self.coeff_var_l1 * loss_var_l1).data, (self.coeff_var_l2 * loss_var_l2).data, (self.coeff_l2 * loss_l2).data))
 
 				with torch.no_grad():
 					if best_cost > loss.item() or best_inputs is None:
