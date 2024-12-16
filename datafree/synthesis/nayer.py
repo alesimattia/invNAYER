@@ -68,16 +68,6 @@ def custom_cross_entropy(preds, target):
 	return torch.mean(torch.sum(-target * preds.log_softmax(dim=-1), dim=-1))
 
 
-### Integrazione da imagenet_inversion.py
-coefficients = dict()
-coefficients["r_feature"] = args.r_feature
-coefficients["first_bn_multiplier"] = args.first_bn_multiplier
-coefficients["tv_l1"] = args.tv_l1
-coefficients["tv_l2"] = args.tv_l2
-coefficients["l2"] = args.l2
-coefficients["lr"] = args.lr
-coefficients["main_loss_multiplier"] = args.main_loss_multiplier
-coefficients["adi_scale"] = args.adi_scale
 
 def get_image_prior_losses(inputs_jit):
 		# Perdita di variazione totale
@@ -101,7 +91,7 @@ class NAYER(BaseSynthesis):
 				 save_dir='run/fast', transform=None, autocast=None, use_fp16=False,
 				 normalizer=None, device='cpu', distributed=False,
 				 warmup=10, bn_mmt=0, bnt=30, oht=1.5,
-				 cr_loop=1, g_life=50, g_loops=1, gwp_loops=10, dataset="cifar10"):
+				 cr_loop=1, g_life=50, g_loops=1, gwp_loops=10, dataset="cifar10", coefficients=None):
 		super(NAYER, self).__init__(teacher, student)
 
 		if "r_feature" in coefficients:
@@ -110,7 +100,6 @@ class NAYER(BaseSynthesis):
 			self.coeff_var_l1 = coefficients["tv_l1"]
 			self.coeff_var_l2 = coefficients["tv_l2"]
 			self.coeff_l2 = coefficients["l2"]
-			self.lr = coefficients["lr"]
 			self.main_loss_multiplier = coefficients["main_loss_multiplier"]
 			self.adi_scale = coefficients["adi_scale"]
 		else:

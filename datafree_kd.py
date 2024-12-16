@@ -186,6 +186,19 @@ def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
     global time_cost
     args.gpu = gpu
+
+    ### Integrazione da imagenet_inversion.py
+    coefficients = dict()
+    coefficients["r_feature"] = args.r_feature
+    coefficients["first_bn_multiplier"] = args.first_bn_multiplier
+    coefficients["tv_l1"] = args.tv_l1
+    coefficients["tv_l2"] = args.tv_l2
+    coefficients["l2"] = args.l2
+    coefficients["lr"] = args.lr
+    coefficients["main_loss_multiplier"] = args.main_loss_multiplier
+    coefficients["adi_scale"] = args.adi_scale
+
+    
     ############################################
     # GPU and FP16
     ############################################
@@ -313,7 +326,8 @@ def main_worker(gpu, ngpus_per_node, args):
                                                   sample_batch_size=args.batch_size,
                                                   g_steps=args.g_steps, warmup=args.warmup, lr_g=args.lr_g, adv=args.adv,
                                                   bn=args.bn, oh=args.oh, bn_mmt=args.bn_mmt, contr=args.contr,
-                                                  g_life=args.g_life, g_loops=args.g_loops, gwp_loops=args.gwp_loops)
+                                                  g_life=args.g_life, g_loops=args.g_loops, gwp_loops=args.gwp_loops,
+                                                  coefficients=coefficients)
         elif args.dataset == 'tiny_imagenet':
             generator = datafree.models.generator.NLGenerator(ngf=64, img_size=64, nc=3, nl=num_classes,
                                                              label_emb=label_emb, le_emb_size=args.le_emb_size,
