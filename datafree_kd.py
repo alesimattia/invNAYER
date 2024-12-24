@@ -31,9 +31,9 @@ parser = argparse.ArgumentParser(description='Inversion loss NAYER')
 # Da "imagenet_inversion.py" coefficient per loss_aux
 parser.add_argument('--tv_l1', type=float, default=0.0, help='coefficient for total variation L1 loss')
 parser.add_argument('--tv_l2', type=float, default=0.0001, help='coefficient for total variation L2 loss')
+parser.add_argument('--l2', type=float, default=0.00001, help='l2 loss on the image')
 parser.add_argument('--r_feature', type=float, default=0.05, help='coefficient for feature distribution regularization')
 parser.add_argument('--first_bn_multiplier', type=float, default=10., help='additional multiplier on first bn layer of R_feature')
-parser.add_argument('--l2', type=float, default=0.00001, help='l2 loss on the image')
 parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coefficient for the main loss in optimization')
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
 
@@ -194,7 +194,6 @@ def main_worker(gpu, ngpus_per_node, args):
     coefficients["tv_l1"] = args.tv_l1
     coefficients["tv_l2"] = args.tv_l2
     coefficients["l2"] = args.l2
-    coefficients["lr"] = args.lr
     coefficients["main_loss_multiplier"] = args.main_loss_multiplier
     coefficients["adi_scale"] = args.adi_scale
 
@@ -442,7 +441,9 @@ def main_worker(gpu, ngpus_per_node, args):
                                                                         sl=loss_synthesizer, oh=loss_oh,
                                                                         co=cost, tm=tm))
         wandb.log({"Acc1": acc1, "Acc5": acc5, "VLoss": val_loss, "lr": optimizer.param_groups[0]['lr'],
-                   "SLoss": loss_synthesizer, "OHLoss": loss_oh, "loss_var_l1":loss_var_l1, "loss_var_l2":loss_var_l2, "loss_l2":loss_l2})
+                    "SLoss": loss_synthesizer, "OHLoss": loss_oh, \
+                    "loss_var_l1":loss_var_l1, "loss_var_l2":loss_var_l2, "loss_l2":loss_l2 \
+                    "Loss_adv":loss})
 
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)

@@ -8,5 +8,6 @@ termcolor
 kornia
 pillow
 tqdm
-XlsxWriter
 pandas
+importlib_metadata
+xlsxwriter
