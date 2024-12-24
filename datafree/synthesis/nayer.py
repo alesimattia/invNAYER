@@ -305,8 +305,8 @@ class NAYER(BaseSynthesis):
 			loader = torch.utils.data.DataLoader(
 				dst, batch_size=self.sample_batch_size, shuffle=(train_sampler is None),
 				num_workers=self.num_workers, pin_memory=True, sampler=train_sampler)
-			self.data_iter = DataIter(loader)
-		return {"synthetic": bi_list}, end - start, best_cost, best_oh, best_loss_var_l1, best_loss_var_l2, best_loss_l2
+			self.data_iter = DataIter(loader)																			#Per il logger WANDB
+		return {"synthetic": bi_list}, end - start, best_cost, best_oh, best_loss_var_l1, best_loss_var_l2, best_loss_l2, loss_bn, loss_adv
 
 	def sample(self):
 		return self.data_iter.next()
