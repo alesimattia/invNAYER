@@ -224,11 +224,17 @@ def main_worker(gpu, ngpus_per_node, args):
     ############################################
     if args.log_tag != '':
         args.log_tag = '-' + args.log_tag
-    log_name = 'R%d-%s-%s-%s%s' % (args.rank, args.dataset, args.teacher, args.student, args.log_tag) \
+
+    #### Abbreviazione Logger
+    # log_name = 'R%d-%s-%s-%s%s' % (args.rank, args.dataset, args.teacher, args.student, args.log_tag) \
+    #     if args.multiprocessing_distributed else '%s-%s-%s' % (args.dataset, args.teacher, args.student)
+    log_name = 'R%d-%s-%s' % (args.rank, args.dataset, args.log_tag) \
         if args.multiprocessing_distributed else '%s-%s-%s' % (args.dataset, args.teacher, args.student)
-    args.logger = datafree.utils.logger.get_logger(log_name, output='checkpoints/datafree-%s/log-%s-%s-%s%s.txt'
-                                                                    % (args.method, args.dataset, args.teacher,
-                                                                       args.student, args.log_tag))
+    # args.logger = datafree.utils.logger.get_logger(log_name, output='checkpoints/datafree-%s/log-%s-%s-%s%s.txt'
+    #                                                                 % (args.method, args.dataset, args.teacher,
+    #                                                                    args.student, args.log_tag))
+    args.logger = datafree.utils.logger.get_logger(log_name, output='checkpoints/datafree-%s/log-%s-%s.txt'
+                                                                    % (args.method, args.dataset, args.log_tag))
     if args.rank <= 0:
         for k, v in datafree.utils.flatten_dict(vars(args)).items():  # print args
             args.logger.info("%s: %s" % (k, v))
