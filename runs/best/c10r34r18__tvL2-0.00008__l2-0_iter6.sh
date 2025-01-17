@@ -5,7 +5,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --partition=boost_usr_prod   # partition name
 #SBATCH --time=4:00:00               # time limits: 1 hour
-#SBATCH --error=err/ERR_c10r34r18-tvL2-0.00008__l2-0_iter7.err            # standard error file
+#SBATCH --error=err/ERR_c10r34r18-tvL2-0.00008__l2-0_iter6.err            # standard error file
 #SBATCH --output=log/LOG_c10r34r18-tvL2-0.00008__l2-0_iter6.log           # standard output file
 #SBATCH --account=IscrC_TS-OKD       # account name
 #SBATCH --verbose
