@@ -25,6 +25,7 @@ import torchvision.transforms as transformstransforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import wandb
+from datafree.metrics.generated_img_quality import inception_score_from_folder
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
 
@@ -180,6 +181,7 @@ def main():
     else:
         # Simply call main_worker function
         main_worker(args.gpu, ngpus_per_node, args)
+        inception_score_from_folder(args.save_dir)
 
 
 def main_worker(gpu, ngpus_per_node, args):
@@ -472,6 +474,7 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.rank <= 0:
         args.logger.info("Best: %.4f" % best_acc1)
         args.logger.info("Generation Cost: %1.3f" % (time_cost / 3600.))
+
 
 
 # do the distillation
