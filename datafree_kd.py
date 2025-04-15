@@ -26,6 +26,7 @@ import torchvision.datasets as datasets
 import torchvision.models as models
 import wandb
 from datafree.metrics.generated_img_quality import inception_score_from_folder
+from datafree.metrics.PCA import model_PCA
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
 
@@ -180,9 +181,17 @@ def main():
         mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
     else:
         # Simply call main_worker function
-        main_worker(args.gpu, ngpus_per_node, args)
-        inception_score_from_folder(args.save_dir)
+        teacher, student, synthesizer, evaluator = main_worker(args.gpu, ngpus_per_node, args)
+        
+        inception_mean, inception_std = inception_score_from_folder(args.save_dir)
+        args.logger.info(f"Inception Score: {inception_mean:.4f} ± {inception_std:.4f}")
 
+        model_PCA(teacher, dataset_root=f"{args.data_root}{args.dataset}",
+                  batch_size=args.batch_size, num_workers=args.workers, 
+                  output_path=f"./{args.log_tag}_teacherPCA.png")
+        model_PCA(student, dataset_root=f"{args.data_root}{args.dataset}",
+                  batch_size=args.batch_size, num_workers=args.workers, 
+                  output_path=f"./{args.log_tag}_studentPCA.png")
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
@@ -398,6 +407,8 @@ def main_worker(gpu, ngpus_per_node, args):
                   .format(args.resume, checkpoint['epoch'], best_acc1))
         else:
             print("[!] no checkpoint found at '{}'".format(args.resume))
+
+    return teacher, student, synthesizer, evaluator
 
     ############################################
     # Evaluate
