@@ -21,12 +21,13 @@ import torch.optim
 import torch.multiprocessing as mp
 import torch.utils.data
 import torch.utils.data.distributed
-import torchvision.transforms as transformstransforms
+import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import wandb
 from datafree.metrics.generated_img_quality import inception_score_from_folder
 from datafree.metrics.PCA import model_PCA
+from datafree.metrics.prediction_distance import prediction_distance
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
 
@@ -38,6 +39,7 @@ parser.add_argument('--r_feature', type=float, default=0.05, help='coefficient f
 parser.add_argument('--first_bn_multiplier', type=float, default=10., help='additional multiplier on first bn layer of R_feature')
 parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coefficient for the main loss in optimization')
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
+parser.add_argument('--PCA', default=0, action='store_true', help='Apply PCA and 3Dplot')
 
 # Data Free
 parser.add_argument('--method', default='nldf')
@@ -186,12 +188,19 @@ def main():
         inception_mean, inception_std = inception_score_from_folder(args.save_dir)
         args.logger.info(f"Inception Score: {inception_mean:.4f} ± {inception_std:.4f}")
 
-        model_PCA(teacher, dataset_root=f"{args.data_root}{args.dataset}",
-                  batch_size=args.batch_size, num_workers=args.workers, 
-                  output_path=f"./{args.log_tag}_teacherPCA.png")
-        model_PCA(student, dataset_root=f"{args.data_root}{args.dataset}",
-                  batch_size=args.batch_size, num_workers=args.workers, 
-                  output_path=f"./{args.log_tag}_studentPCA.png")
+        if(args.PCA):
+            model_PCA(teacher, components=3, dataset_root=f"{args.data_root}{args.dataset}",
+                    batch_size=args.batch_size, num_workers=args.workers, 
+                    output_path=f"./{args.log_tag}_teacherPCA.png")
+            model_PCA(student, components=3, dataset_root=f"{args.data_root}{args.dataset}",
+                    batch_size=args.batch_size, num_workers=args.workers, 
+                    output_path=f"./{args.log_tag}_studentPCA.png")
+            teacher_student_dst = prediction_distance(teacher, student, dataset_root=f"{args.data_root}{args.dataset}",
+                    batch_size=args.batch_size, num_workers=args.workers)
+            
+            for class_idx, mean_distance in teacher_student_dst.items():
+                args.logger.info(f"Classe {class_idx}: Distanza media = {mean_distance:.4f}")
+                wandb.log({f"Classe {class_idx}": mean_distance})
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
@@ -407,8 +416,6 @@ def main_worker(gpu, ngpus_per_node, args):
                   .format(args.resume, checkpoint['epoch'], best_acc1))
         else:
             print("[!] no checkpoint found at '{}'".format(args.resume))
-
-    return teacher, student, synthesizer, evaluator
 
     ############################################
     # Evaluate
