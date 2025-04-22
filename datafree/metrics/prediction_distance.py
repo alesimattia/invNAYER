@@ -1,4 +1,4 @@
-def teacher_student_distance(teacher, student, dataset_root='./CIFAR10', batch_size=512, num_workers=4):
+def prediction_distance(teacher, student, dataset_root='./CIFAR10', batch_size=512, num_workers=4):
     """
     Calcola la distanza media tra le predizioni del modello teacher e quelle del modello studente per ogni classe.
     """
@@ -17,7 +17,6 @@ def teacher_student_distance(teacher, student, dataset_root='./CIFAR10', batch_s
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))  # Normalizzazione standard CIFAR-10
     ])
-
 
     '''
         datasets => torchvision.datasets
@@ -45,9 +44,5 @@ def teacher_student_distance(teacher, student, dataset_root='./CIFAR10', batch_s
 
     # Calcolo della distanza media per ogni classe
     mean_distances = {class_idx: np.mean(class_distances[class_idx]) for class_idx in class_distances}
-
-    # Stampa i risultati
-    for class_idx, mean_distance in mean_distances.items():
-        print(f"Classe {class_idx}: Distanza media = {mean_distance:.4f}")
 
     return mean_distances
