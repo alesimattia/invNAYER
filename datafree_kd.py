@@ -39,8 +39,8 @@ parser.add_argument('--r_feature', type=float, default=0.05, help='coefficient f
 parser.add_argument('--first_bn_multiplier', type=float, default=10., help='additional multiplier on first bn layer of R_feature')
 parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coefficient for the main loss in optimization')
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
-parser.add_argument('--PCA', default=0, action='store_true', help='Apply PCA and 3Dplot')
-parser.add_argument('--distance', default=0, action='store_true', help='Compute teacher and student predictions distance')   
+parser.add_argument('--PCA', type=int, default=0, help='Apply PCA and 3Dplot')
+parser.add_argument('--distance', type=int, default=0, help='Compute teacher and student predictions distance')   
 
 # Data Free
 parser.add_argument('--method', default='nldf')
