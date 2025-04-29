@@ -190,13 +190,13 @@ def main():
         args.logger.info(f"Inception Score: {inception_mean:.4f} ± {inception_std:.4f}")
 
         if(args.PCA):
-            model_PCA(teacher, components=3, dataset_root=f"{args.data_root}{args.dataset}",
+            model_PCA(teacher, components=3, dataset_root=args.data_root+args.dataset.upper(),
                     batch_size=args.batch_size, num_workers=args.workers, 
-                    output_path=f"./{args.log_tag}_teacherPCA.png")
-            model_PCA(student, components=3, dataset_root=f"{args.data_root}{args.dataset}",
+                    output_path=f"./PCA_img/{args.log_tag}_teacherPCA.png")
+            model_PCA(student, components=3, dataset_root=args.data_root+args.dataset.upper(),
                     batch_size=args.batch_size, num_workers=args.workers, 
-                    output_path=f"./{args.log_tag}_studentPCA.png")
-            teacher_student_dst = prediction_distance(teacher, student, dataset_root=f"{args.data_root}{args.dataset}",
+                    output_path=f"./PCA_img/{args.data_root}{args.log_tag}_studentPCA.png")
+            teacher_student_dst = prediction_distance(teacher, student, dataset_root=args.data_root+args.dataset,
                     batch_size=args.batch_size, num_workers=args.workers)
             
             for class_idx, mean_distance in teacher_student_dst.items():
@@ -493,7 +493,7 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.rank <= 0:
         args.logger.info("Best: %.4f" % best_acc1)
         args.logger.info("Generation Cost: %1.3f" % (time_cost / 3600.))
-
+    return teacher, student, synthesizer, evaluator
 
 
 # do the distillation

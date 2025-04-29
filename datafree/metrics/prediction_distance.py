@@ -1,4 +1,4 @@
-def prediction_distance(teacher, student, dataset_root='./CIFAR10', batch_size=512, num_workers=4):
+def prediction_distance(teacher, student, dataset_root='../CIFAR10', batch_size=512, num_workers=4):
     """
     Calcola la distanza media tra le predizioni del modello teacher e quelle del modello studente per ogni classe.
     """

@@ -1,4 +1,4 @@
-def model_PCA(model, components=3, dataset_root='./CIFAR10', batch_size=512, num_workers=4, output_path='./PCA_plot.png'):
+def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, num_workers=4, output_path='./PCA_plot.png'):
     """
     Estrae le 3 caratteristiche principali del modello mediante PCA e le 
     visualizza in uno spazio 3D
