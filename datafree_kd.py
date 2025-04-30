@@ -190,18 +190,20 @@ def main():
         args.logger.info(f"Inception Score: {inception_mean:.4f} ± {inception_std:.4f}")
 
         if(args.PCA):
-            model_PCA(teacher, components=3, dataset_root=args.data_root+args.dataset.upper(),
-                    batch_size=args.batch_size, num_workers=args.workers, 
+            model_PCA(teacher, components=3, batch_size=args.batch_size, num_workers=args.workers, 
+                    dataset_root=os.path.join(os.path.dirname(__file__), '../dataset', args.dataset.upper()),
                     output_path=f"./PCA_img/{args.log_tag}_teacherPCA.png")
-            model_PCA(student, components=3, dataset_root=args.data_root+args.dataset.upper(),
-                    batch_size=args.batch_size, num_workers=args.workers, 
-                    output_path=f"./PCA_img/{args.data_root}{args.log_tag}_studentPCA.png")
-            teacher_student_dst = prediction_distance(teacher, student, dataset_root=args.data_root+args.dataset,
-                    batch_size=args.batch_size, num_workers=args.workers)
             
+            model_PCA(student, components=3, batch_size=args.batch_size, num_workers=args.workers, 
+                    dataset_root=os.path.join(os.path.dirname(__file__), '../dataset', args.dataset.upper()),
+                    output_path=f"./PCA_img/{args.log_tag}_studentPCA.png")
+            
+            teacher_student_dst = prediction_distance(teacher, student, 
+                    dataset_root=os.path.join(os.path.dirname(__file__), '../dataset', args.dataset.upper()),
+                    batch_size=args.batch_size, num_workers=args.workers)
             for class_idx, mean_distance in teacher_student_dst.items():
                 args.logger.info(f"Classe {class_idx}: Distanza media = {mean_distance:.4f}")
-                wandb.log({f"Classe {class_idx}": mean_distance})
+                wandb.log(f"Classe {class_idx}: Distanza media = {mean_distance}")
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1

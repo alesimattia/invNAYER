@@ -3,6 +3,7 @@ torchvision
 matplotlib
 numpy
 scikit-learn
+sklearn
 einops
 termcolor
 kornia
@@ -11,3 +12,4 @@ tqdm
 pandas
 importlib_metadata
 xlsxwriter
+mpl-tools
