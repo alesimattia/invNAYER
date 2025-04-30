@@ -188,7 +188,7 @@ def main():
         
         inception_mean, inception_std = inception_score_from_folder(args.save_dir)
         args.logger.info(f"Inception Score: {inception_mean:.4f} ± {inception_std:.4f}")
-
+        args.logger.info("Dataset Location:" + str(os.path.dirname(__file__)) + '../dataset' + str(args.dataset.upper()) )
         if(args.PCA):
             model_PCA(teacher, components=3, batch_size=args.batch_size, num_workers=args.workers, 
                     dataset_root=os.path.join(os.path.dirname(__file__), '../dataset', args.dataset.upper()),
