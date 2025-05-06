@@ -188,7 +188,8 @@ def main():
         
         inception_mean, inception_std = inception_score_from_folder(args.save_dir)
         args.logger.info(f"Inception Score: {inception_mean:.4f} ± {inception_std:.4f}")
-        args.logger.info("Dataset Location:" + str(os.path.dirname(__file__)) + '../' + str(args.dataset.upper()) )
+        wandb.log({"Inception Score": inception_mean, "Inception Std": inception_std})
+
         if(args.PCA):
             model_PCA(teacher, components=3, batch_size=args.batch_size, num_workers=args.workers, 
                     dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
@@ -203,7 +204,7 @@ def main():
                     batch_size=args.batch_size, num_workers=args.workers)
             for class_idx, mean_distance in teacher_student_dst.items():
                 args.logger.info(f"Classe {class_idx}: Distanza media = {mean_distance:.4f}")
-                wandb.log(f"Classe {class_idx}: Distanza media = {mean_distance}")
+                wandb.log({f"Classe_{class_idx}_Distanza_media": mean_distance})
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
