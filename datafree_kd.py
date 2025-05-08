@@ -191,6 +191,8 @@ def main():
         wandb.log({"Inception Score": inception_mean, "Inception Std": inception_std})
 
         if(args.PCA):
+            #student.load_state_dict(torch.load('./checkpoints/pretrained/%s_%s.pth' % (args.dataset, args.teacher),
+                                           #map_location='cpu')['state_dict'])
             model_PCA(teacher, components=3, batch_size=args.batch_size, num_workers=args.workers, 
                     dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
                     output_path=f"./PCA_img/{args.log_tag}_teacherPCA.png")
@@ -202,6 +204,7 @@ def main():
             teacher_student_dst = prediction_distance(teacher, student, 
                     dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
                     batch_size=args.batch_size, num_workers=args.workers)
+        if(args.distance):
             for class_idx, mean_distance in teacher_student_dst.items():
                 args.logger.info(f"Classe {class_idx}: Distanza media = {mean_distance:.4f}")
                 wandb.log({f"Classe_{class_idx}_Distanza_media": mean_distance})
@@ -328,6 +331,10 @@ def main_worker(gpu, ngpus_per_node, args):
                                            map_location='cpu')['state_dict'])
     student = prepare_model(student)
     teacher = prepare_model(teacher)
+
+    if(args.PCA):
+        return teacher, student
+    
     criterion = datafree.criterions.KLDiv(T=args.T)
 
     ############################################
