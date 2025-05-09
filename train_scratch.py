@@ -266,6 +266,7 @@ def main_worker(gpu, ngpus_per_node, args):
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
         _best_ckpt = f"./checkpoints/scratch/{args.dataset}_{args.model}.pth"
+        args.logger.info(f"OUTPUT PATH: ./checkpoints/scratch/{args.dataset}_{args.model}.pth")
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
             if 66.4 < acc1 < 66.5:

@@ -201,10 +201,11 @@ def main():
                     dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
                     output_path=f"./PCA_img/{args.log_tag}_studentPCA.png")
             
+        if(args.distance):
             teacher_student_dst = prediction_distance(teacher, student, 
                     dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
                     batch_size=args.batch_size, num_workers=args.workers)
-        if(args.distance):
+            
             for class_idx, mean_distance in teacher_student_dst.items():
                 args.logger.info(f"Classe {class_idx}: Distanza media = {mean_distance:.4f}")
                 wandb.log({f"Classe_{class_idx}_Distanza_media": mean_distance})
