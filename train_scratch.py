@@ -265,7 +265,7 @@ def main_worker(gpu, ngpus_per_node, args):
         scheduler.step()
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
-        _best_ckpt = 'checkpoints/scratch/%s_%s_%s.pth'%(args.dataset, args.model, args.ver)
+        _best_ckpt = f"./checkpoints/scratch/{args.dataset}_{args.model}.pth"
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
             if 66.4 < acc1 < 66.5:
