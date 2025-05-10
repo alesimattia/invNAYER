@@ -266,23 +266,13 @@ def main_worker(gpu, ngpus_per_node, args):
         is_best = acc1 > best_acc1
         best_acc1 = max(acc1, best_acc1)
         #_best_ckpt = f"./checkpoints/scratch/{args.dataset}_{args.model}.pth"
-        _best_ckpt = os.path.join(os.path.dirname(__file__), "./checkpoints/scratch/"+args.dataset+args.model)
-        args.logger.info(f"OUTPUT PATH2: {_best_ckpt}")
+        _best_ckpt = os.path.join(os.path.dirname(__file__), str("./checkpoints/scratch/"+args.dataset+"_"+args.model+".pth") )
+        args.logger.info(f"OUTPUT PATH: {_best_ckpt}")
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
-            if 66.4 < acc1 < 66.5:
-                args.logger.info("Saving checkpoint at line 273")
-                save_checkpoint({
-                    'epoch': epoch + 1,
-                    'arch': args.model,
-                    'state_dict': model.state_dict(),
-                    'best_acc1': float(acc1),
-                    'optimizer' : optimizer.state_dict(),
-                    'scheduler': scheduler.state_dict()
-                }, True, _best_ckpt)
+            if acc1 > best_acc1:
                 best_acc1 = acc1
-            if acc1 == 66.44:
-                args.logger.info("Saving checkpoint at line 284")
+                args.logger.info("Saving checkpoint with acc1 %.4f" % acc1)
                 save_checkpoint({
                     'epoch': epoch + 1,
                     'arch': args.model,
@@ -291,11 +281,8 @@ def main_worker(gpu, ngpus_per_node, args):
                     'optimizer' : optimizer.state_dict(),
                     'scheduler': scheduler.state_dict()
                 }, True, _best_ckpt)
-                args.logger.info("Best: %.4f" % acc1)
-                return 1
-
     if args.rank<=0:
-        args.logger.info("Best: %.4f"%best_acc1)
+        args.logger.info("Best acc: %.4f"%best_acc1)
 
 
 def train(train_loader, model, criterion, optimizer, args):
