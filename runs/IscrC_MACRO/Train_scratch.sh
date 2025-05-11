@@ -10,5 +10,5 @@
 #SBATCH --account=IscrC_MACRO        # account name
 #SBATCH --verbose
 #SBATCH --cpus-per-task=4
-python train_scratch.py --model resnet18 --dataset CIFAR10 --batch-size 512 --lr 0.2 --epoch 2 --gpu 0 \
+python train_scratch.py --model resnet18 --dataset CIFAR10 --batch-size 512 --lr 0.2 --epoch 100 --gpu 0 \
 	--workers 4 --data_root ../ --seed 32 --print-freq 60

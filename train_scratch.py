@@ -263,18 +263,15 @@ def main_worker(gpu, ngpus_per_node, args):
         args.logger.info('[Eval] Epoch={current_epoch} Acc@1={acc1:.4f} Acc@5={acc5:.4f} Loss={loss:.4f} Lr={lr:.4f} Time:{t:.4f}'
                 .format(current_epoch=args.current_epoch, acc1=acc1, acc5=acc5, loss=val_loss, lr=optimizer.param_groups[0]['lr'], t=time_end))
         scheduler.step()
-        args.logger.info("PRIOR: Acc1: %.4f, Best acc1: %.4f"%(acc1, best_acc1))
         best_acc1 = max(acc1, best_acc1)
-        args.logger.info("CURRENT: Acc1: %.4f, Best acc1: %.4f"%(acc1, best_acc1))
         #_best_ckpt = f"./checkpoints/scratch/{args.dataset}_{args.model}.pth"
         _best_ckpt = os.path.join(os.path.dirname(__file__), str("checkpoints/scratch/"+args.dataset+"_"+args.model+".pth") )
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
-            args.logger.info("Inside NOT args.multiprocessing_distributed")
             if acc1 > best_acc1:
                 best_acc1 = acc1
             args.logger.info("Saving checkpoint with acc1 %.4f" % acc1)
-            args.logger.info(f"OUTPUT PATH: {_best_ckpt}")
+            #args.logger.info(f"OUTPUT PATH: {_best_ckpt}")
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.model,
