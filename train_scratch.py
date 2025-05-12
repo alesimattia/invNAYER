@@ -140,7 +140,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # Logger
     ############################################
     log_name = 'R%d-%s-%s'%(args.rank, args.dataset, args.model) if args.multiprocessing_distributed else '%s-%s'%(args.dataset, args.model)
-    args.logger = datafree.utils.logger.get_logger(log_name, output='checkpoints/scratch/log-%s-%s.txt'%(args.dataset, args.model))
+    args.logger = datafree.utils.logger.get_logger(log_name, output='checkpoints/scratch/log-%s-%s-%d.txt'%(args.dataset, args.model, args.epochs))
     if args.rank<=0:
         for k, v in datafree.utils.flatten_dict( vars(args) ).items(): # print args
             args.logger.info( "%s: %s"%(k,v) )
@@ -265,7 +265,7 @@ def main_worker(gpu, ngpus_per_node, args):
         scheduler.step()
         best_acc1 = max(acc1, best_acc1)
         #_best_ckpt = f"./checkpoints/scratch/{args.dataset}_{args.model}.pth"
-        _best_ckpt = os.path.join(os.path.dirname(__file__), str("checkpoints/scratch/"+args.dataset+"_"+args.model+"_"+args.epochs+"ep.pth") )
+        _best_ckpt = os.path.join(os.path.dirname(__file__), str("checkpoints/scratch/"+args.dataset+"_"+args.model+"_"+str(args.epochs)+"ep.pth") )
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
             if acc1 > best_acc1:

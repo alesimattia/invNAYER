@@ -334,7 +334,7 @@ def main_worker(gpu, ngpus_per_node, args):
     teacher = prepare_model(teacher)
 
     if(args.PCA):
-        return teacher, student
+        return teacher, student, None, None
     
     criterion = datafree.criterions.KLDiv(T=args.T)
 
