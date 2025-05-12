@@ -265,7 +265,7 @@ def main_worker(gpu, ngpus_per_node, args):
         scheduler.step()
         best_acc1 = max(acc1, best_acc1)
         #_best_ckpt = f"./checkpoints/scratch/{args.dataset}_{args.model}.pth"
-        _best_ckpt = os.path.join(os.path.dirname(__file__), str("checkpoints/scratch/"+args.dataset+"_"+args.model+".pth") )
+        _best_ckpt = os.path.join(os.path.dirname(__file__), str("checkpoints/scratch/"+args.dataset+"_"+args.model+"_"+args.epochs+"ep.pth") )
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
             if acc1 > best_acc1:
