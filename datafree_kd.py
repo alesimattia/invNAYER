@@ -40,7 +40,8 @@ parser.add_argument('--first_bn_multiplier', type=float, default=10., help='addi
 parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coefficient for the main loss in optimization')
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
 parser.add_argument('--PCA', type=int, default=0, help='Apply PCA and 3Dplot')
-parser.add_argument('--distance', type=int, default=0, help='Compute teacher and student predictions distance')   
+parser.add_argument('--saved_student ', type=str, default=None, help='Path to pre-trained .pth model (for PCA)')
+parser.add_argument('--distance', default=False, action=argparse.BooleanOptionalAction, help='Compute teacher and student predictions distance')
 
 # Data Free
 parser.add_argument('--method', default='nldf')
@@ -186,29 +187,53 @@ def main():
         # Simply call main_worker function
         teacher, student, synthesizer, evaluator = main_worker(args.gpu, ngpus_per_node, args)
         
+        '''
+        Eseguito al termine delle epoche di addestramento => cartella popolata con immagini sintetizzate
+        '''
         inception_mean, inception_std = inception_score_from_folder(args.save_dir)
         args.logger.info(f"Inception Score: {inception_mean:.4f} ± {inception_std:.4f}")
         wandb.log({"Inception Score": inception_mean, "Inception Std": inception_std})
 
-        if(args.PCA):
-            #student.load_state_dict(torch.load('./checkpoints/pretrained/%s_%s.pth' % (args.dataset, args.teacher),
-                                           #map_location='cpu')['state_dict'])
-            model_PCA(teacher, components=3, batch_size=args.batch_size, num_workers=args.workers, 
-                    dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
-                    output_path=f"./PCA_img/{args.log_tag}_teacherPCA.png")
-            
-            model_PCA(student, components=3, batch_size=args.batch_size, num_workers=args.workers, 
-                    dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
-                    output_path=f"./PCA_img/{args.log_tag}_studentPCA.png")
-            
-        if(args.distance):
-            teacher_student_dst = prediction_distance(teacher, student, 
-                    dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
-                    batch_size=args.batch_size, num_workers=args.workers)
-            
-            for class_idx, mean_distance in teacher_student_dst.items():
-                args.logger.info(f"Classe {class_idx}: Distanza media = {mean_distance:.4f}")
-                wandb.log({f"Classe_{class_idx}_Distanza_media": mean_distance})
+    if(args.PCA):
+        num_classes, _, _ = registry.get_dataset(name=args.dataset, data_root=args.data_root)
+
+        teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
+        teacher.load_state_dict(torch.load(f'./checkpoints/pretrained/{args.dataset}_{args.teacher}.pth',
+                                           map_location='cpu')['state_dict'])
+        model_PCA(teacher, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
+                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                output_path=f"./PCA_img/teacher_PCA.png")
+        
+
+        student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
+        student.load_state_dict(torch.load(f"./checkpoints/datafree-{args.method} \
+                                /cifar10-resnet34-resnet18--{args.log_tag}.pth",
+                                map_location='cpu')['state_dict'])
+        model_PCA(student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
+                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                output_path=f"./PCA_img/{args.log_tag}_PCA.png")
+        
+                                                                                                        #epoche di esecuzione != epoche traon studente scratch
+        scratch_student = torch.nn.Module.load_state_dict(torch.load(f"./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth",
+                                        map_location='cpu')['state_dict'])
+        model_PCA(scratch_student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
+                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                output_path=f"./PCA_img/scratchStudent_PCA.png")
+        
+        
+    if(args.distance):
+        teacher_student_dst = prediction_distance(teacher, student, 
+                                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                                batch_size=args.batch_size, num_workers=args.workers)
+        student_scratch_dst = prediction_distance(scratch_student, student,
+                                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                                batch_size=args.batch_size, num_workers=args.workers)
+        for class_idx, mean_distance in teacher_student_dst.items():
+            args.logger.info(f"Distanza media T-S Classe {class_idx}: {mean_distance:.4f}")
+            wandb.log({f"Distanza media T-S Classe {class_idx}": mean_distance})
+        for class_idx, mean_distance in student_scratch_dst.items():
+            args.logger.info(f"Distanza media S-Sc Classe {class_idx}: {mean_distance:.4f}")
+            wandb.log({f"Distanza media S-Sc Classe {class_idx}": mean_distance})
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
