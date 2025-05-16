@@ -209,8 +209,7 @@ def main():
         
 
         student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
-        student.load_state_dict(torch.load(f"./checkpoints/datafree-{args.method} \
-                                /cifar10-resnet34-resnet18--{args.log_tag}.pth",
+        student.load_state_dict(torch.load(f"./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.saved_student}.pth",
                                 map_location='cpu')['state_dict'])
         model_PCA(student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
                 dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
