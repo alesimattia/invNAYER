@@ -41,7 +41,7 @@ parser.add_argument('--first_bn_multiplier', type=float, default=10., help='addi
 parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coefficient for the main loss in optimization')
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
 parser.add_argument('--PCA', type=int, default=0, help='Apply PCA and 3Dplot')
-parser.add_argument('--saved_student ', type=str, default=None, help='Path to pre-trained .pth model (for PCA)')
+parser.add_argument('--savedStudent', type=str, default='', help='Path to pre-trained .pth model (for PCA)')
 parser.add_argument('--distance', default=False, action=argparse.BooleanOptionalAction, help='Compute teacher and student predictions distance')
 
 # Data Free
@@ -209,11 +209,11 @@ def main():
         
 
         student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
-        student.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.saved_student}.pth',
+        student.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.savedStudent}.pth',
                                 map_location='cpu')['state_dict'])
         model_PCA(student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
                 dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
-                output_path=f"./PCA_img/{args.saved_student}_PCA.png")
+                output_path=f"./PCA_img/{args.savedStudent}_PCA.png")
         
         
         scratch_student = registry.get_model(f'{args.dataset}_{args.student}_100ep',num_classes=num_classes, pretrained=True).eval()                                                                                            #epoche di esecuzione != epoche traon studente scratch
