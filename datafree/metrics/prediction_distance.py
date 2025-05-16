@@ -28,7 +28,7 @@ def prediction_distance(teacher, student, dataset_root='../CIFAR10', batch_size=
     test_loader = torch.utils.data.DataLoader(cifar_test, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
     # Distanze per classe
-    class_distances = {i: [] for i in range(cifar_test.classes)}
+    class_distances = {i: [] for i in len(cifar_test.classes)}
 
     with torch.no_grad():
         for images, targets in test_loader:
