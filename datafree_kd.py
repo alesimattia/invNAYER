@@ -216,7 +216,7 @@ def main():
                 output_path=f"./PCA_img/{args.savedStudent}_PCA.png")
         
         
-        scratch_student = registry.get_model(f'{args.dataset}_{args.student}_100ep',num_classes=num_classes, pretrained=True).eval()                                                                                            #epoche di esecuzione != epoche traon studente scratch
+        scratch_student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()                                                                                            #epoche di esecuzione != epoche traon studente scratch
         scratch_student.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth',
                                         map_location='cpu')['state_dict'])
         model_PCA(scratch_student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
