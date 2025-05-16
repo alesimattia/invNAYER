@@ -1,6 +1,7 @@
 import argparse
 from math import gamma
 import os
+import glob
 import random
 import shutil
 import warnings
@@ -190,9 +191,11 @@ def main():
         '''
         Eseguito al termine delle epoche di addestramento => cartella popolata con immagini sintetizzate
         '''
-        inception_mean, inception_std = inception_score_from_folder(args.save_dir)
-        args.logger.info(f"Inception Score: {inception_mean:.4f} ± {inception_std:.4f}")
-        wandb.log({"Inception Score": inception_mean, "Inception Std": inception_std})
+        if len( glob.glob(os.path.join("./", args.save_dir, "*.png")) ) > 0:
+            inception_mean, inception_std = inception_score_from_folder(args.save_dir)
+            args.logger.info(f"Inception Score: {inception_mean:.4f} ± {inception_std:.4f}")
+            wandb.log({"Inception Score": inception_mean, "Inception Std": inception_std})
+        #Altrimenti salta
 
     if(args.PCA):
         num_classes, _, _ = registry.get_dataset(name=args.dataset, data_root=args.data_root)
