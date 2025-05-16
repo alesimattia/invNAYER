@@ -238,10 +238,10 @@ def main():
             args.logger.info(f"Distanza media S-Sc Classe {class_idx}: {mean_distance:.4f}")
             wandb.log({f"Distanza media S-Sc Classe {class_idx}": mean_distance}) """
 
-        args.logger.info(f"Avg Teacher-Student per Class: {teacher_student_dst.items()[0]:.4f}")
-        wandb.log({f"Avg Teacher-Student per Class": teacher_student_dst.items()[0]})
-        args.logger.info(f"Avg Student-Scratch per Class: {student_scratch_dst.items()[0]:.4f}")
-        wandb.log({f"Avg Student-Scratch per Class": student_scratch_dst.items()[0]})
+        args.logger.info(f"LOG Avg Teacher-Student per Class: {teacher_student_dst.items():.4f}")
+        wandb.log({f"Avg Teacher-Student per Class": teacher_student_dst.items()})
+        args.logger.info(f"Avg Student-Scratch per Class: {student_scratch_dst.items():.4f}")
+        wandb.log({f"Avg Student-Scratch per Class": student_scratch_dst.items()})
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
