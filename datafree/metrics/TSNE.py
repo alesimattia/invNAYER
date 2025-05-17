@@ -5,14 +5,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 
-'''
-	Il numero massimo di componenti è 2
-	Da documentazione repo tsne-cuda (https://github.com/CannyLab/tsne-cuda)
-	
-'''
 def compute_TSNE(model, dataset_root, batch_size=512, num_workers=4, output_path="./tsne.png"):
+    
     """
     Applica t-SNE alle predizioni del modello e restituisce il grafico come oggetto matplotlib.
+	- Il numero massimo di componenti è 2 da documentazione repo. (https://github.com/CannyLab/tsne-cuda)
+	- Molto lento rispetto a PCA
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
