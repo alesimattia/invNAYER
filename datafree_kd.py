@@ -232,12 +232,16 @@ def main():
         student_scratch_dst = prediction_distance(scratch_student, student,
                                 dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
                                 batch_size=args.batch_size, num_workers=args.workers)
+        # for class_idx, mean_distance in teacher_student_dst.items():
+        #     args.logger.info({"LOG Avg Teacher-Student per Class": mean_distance})
+        #     wandb.log({"Avg Teacher-Student per Class": mean_distance}, step=class_idx)
+        # for class_idx, mean_distance in student_scratch_dst.items():
+        #     args.logger.info({"LOG Avg Student-Scratch per Class": mean_distance})
+        #     wandb.log({"Avg Student-Scratch per Class": mean_distance}, step=class_idx)
         for class_idx, mean_distance in teacher_student_dst.items():
-            args.logger.info({"LOG Avg Teacher-Student per Class": mean_distance})
-            wandb.log({"Avg Teacher-Student per Class": mean_distance})
+            wandb.log({"Avg Teacher-Student per Class": mean_distance}, step=class_idx)
         for class_idx, mean_distance in student_scratch_dst.items():
-            args.logger.info({"LOG Avg Student-Scratch per Class": mean_distance})
-            wandb.log({"Avg Student-Scratch per Class": mean_distance})
+            wandb.log({"Avg Student-Scratch per Class": mean_distance}, step=class_idx)
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
