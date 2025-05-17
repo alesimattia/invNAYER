@@ -200,10 +200,12 @@ def main():
             wandb.log({"Inception Score": inception_mean, "Inception Std": inception_std})
         #Altrimenti salta
 
-
+    #
+    ### METRICHE
 
     if(args.PCA or args.TSNE or args.distance):
         num_classes, _, _ = registry.get_dataset(name=args.dataset, data_root=args.data_root)
+        dataset_location = os.path.join(os.path.dirname(__file__), '../', args.dataset.upper())
 
         #Caricamento modelli pre-addestrati
         teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
@@ -216,61 +218,50 @@ def main():
 
     if(args.PCA):
         teacher_img = model_PCA(teacher, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
-                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                dataset_root=dataset_location,
                 output_path=f"./PCA_img/teacher_PCA.png")
         wandb.log({"Teacher_PCA": wandb.Image(teacher_img)})
 
         student_img = model_PCA(student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
-                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                dataset_root=dataset_location,
                 output_path=f"./PCA_img/{args.savedStudent}_PCA.png")
         wandb.log({"Student_PCA": wandb.Image(student_img)})
 
         scratch_student_img = model_PCA(scratch_student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
-                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                dataset_root=dataset_location,
                 output_path=f"./PCA_img/scratchStudent_PCA.png")
         wandb.log({"Scratch_Student_PCA": wandb.Image(scratch_student_img)})
 
 
     if(args.distance):
         teacher_student_dst = prediction_distance(teacher, student,
-                                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                                dataset_root=dataset_location,
                                 batch_size=args.batch_size, num_workers=args.workers)
         student_scratch_dst = prediction_distance(scratch_student, student,
-                                dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
+                                dataset_root=dataset_location,
                                 batch_size=args.batch_size, num_workers=args.workers)
-        # for class_idx, mean_distance in teacher_student_dst.items():
-        #     args.logger.info({"LOG Avg Teacher-Student per Class": mean_distance})
-        #     wandb.log({"Avg Teacher-Student per Class": mean_distance}, step=class_idx)
-        # for class_idx, mean_distance in student_scratch_dst.items():
-        #     args.logger.info({"LOG Avg Student-Scratch per Class": mean_distance})
-        #     wandb.log({"Avg Student-Scratch per Class": mean_distance}, step=class_idx)
         """ for class_idx, mean_distance in teacher_student_dst.items():
             wandb.log({"Avg Teacher-Student per Class": mean_distance})
         for class_idx, mean_distance in student_scratch_dst.items():
             wandb.log({"Avg Student-Scratch per Class": mean_distance}, step=class_idx)
         """
         wandb.log({
-            "Teacher-Student mean Prediction Distance": [teacher_student_dst[k] for k in sorted(teacher_student_dst.keys())],
-            "Student-Scratch mean Prediction Distance": [student_scratch_dst[k] for k in sorted(student_scratch_dst.keys())]
+            "Teacher-Student mean Prediction Distance": [teacher_student_dst[k] for k in teacher_student_dst.keys()],
+            "Student-Scratch mean Prediction Distance": [student_scratch_dst[k] for k in student_scratch_dst.keys()]
         })
 
+
     if(args.TSNE):
-        teacher_img = compute_TSNE(teacher,
-            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
-            batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png"
-        )
+        teacher_img = compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size, 
+                                   num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png" )
         wandb.log({"Teacher TSNE": wandb.Image(teacher_img)})
 
-        student_img = compute_TSNE(student,
-            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
-            batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/student_TSNE.png"
-        )
+        student_img = compute_TSNE(student, dataset_root=dataset_location, batch_size=args.batch_size, 
+                                   num_workers=args.workers, output_path="./TSNE_img/student_TSNE.png" )
         wandb.log({"Student TSNE": wandb.Image(student_img)})
         
-        scratch_student_img = compute_TSNE(scratch_student,
-            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
-            batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png"
-        )
+        scratch_student_img = compute_TSNE(scratch_student, dataset_root=dataset_location, batch_size=args.batch_size, 
+                                           num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png" )
         wandb.log({"Scratch Student TSNE": wandb.Image(scratch_student_img)})
 
 
