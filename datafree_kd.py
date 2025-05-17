@@ -248,19 +248,19 @@ def main():
 
     if(args.TSNE):
         teacher_img = compute_TSNE(teacher,
-            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset),
+            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
             batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png"
         )
         wandb.log({"Teacher TSNE": wandb.Image(teacher_img)})
 
         student_img = compute_TSNE(student,
-            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset),
+            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
             batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/student_TSNE.png"
         )
         wandb.log({"Student TSNE": wandb.Image(student_img)})
         
         scratch_student_img = compute_TSNE(scratch_student,
-            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset),
+            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
             batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/scratch_student_TSNE.png"
         )
         wandb.log({"Scratch Student TSNE": wandb.Image(scratch_student_img)})

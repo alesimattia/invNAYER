@@ -55,5 +55,4 @@ def compute_TSNE(model, dataset_root, batch_size=512, num_workers=4, output_path
     plt.savefig(output_path)
     
     print(f"TSNE plot creato")
-    
     return fig
