@@ -200,31 +200,31 @@ def main():
             wandb.log({"Inception Score": inception_mean, "Inception Std": inception_std})
         #Altrimenti salta
 
-    if(args.PCA):
+
+
+    if(args.PCA or args.TSNE or args.distance):
         num_classes, _, _ = registry.get_dataset(name=args.dataset, data_root=args.data_root)
 
-        ### TEACHER
+        #Caricamento modelli pre-addestrati
         teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
         teacher.load_state_dict(torch.load(f'./checkpoints/pretrained/{args.dataset}_{args.teacher}.pth', map_location='cpu')['state_dict'])
+        student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
+        student.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.savedStudent}.pth', map_location='cpu')['state_dict'])
+        scratch_student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()                                                                                            #epoche di esecuzione != epoche traon studente scratch
+        scratch_student.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth', map_location='cpu')['state_dict'])
         
+
+    if(args.PCA):
         teacher_img = model_PCA(teacher, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
                 dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
                 output_path=f"./PCA_img/teacher_PCA.png")
         wandb.log({"Teacher_PCA": wandb.Image(teacher_img)})
 
-        ### STUDENT
-        student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
-        student.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.savedStudent}.pth', map_location='cpu')['state_dict'])
-        
         student_img = model_PCA(student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
                 dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
                 output_path=f"./PCA_img/{args.savedStudent}_PCA.png")
         wandb.log({"Student_PCA": wandb.Image(student_img)})
 
-        ### SCRATCH STUDENT
-        scratch_student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()                                                                                            #epoche di esecuzione != epoche traon studente scratch
-        scratch_student.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth', map_location='cpu')['state_dict'])
-        
         scratch_student_img = model_PCA(scratch_student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
                 dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
                 output_path=f"./PCA_img/scratchStudent_PCA.png")
@@ -262,9 +262,6 @@ def main():
         )
         wandb.log({"Student TSNE": wandb.Image(student_img)})
         
-
-        scratch_student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()                                                                                            #epoche di esecuzione != epoche traon studente scratch
-        scratch_student.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth', map_location='cpu')['state_dict'])
         scratch_student_img = compute_TSNE(scratch_student,
             dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset.upper()),
             batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png"
