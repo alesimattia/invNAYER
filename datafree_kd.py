@@ -202,7 +202,7 @@ def main():
 
     #
     ### METRICHE
-
+    #
     if(args.PCA or args.TSNE or args.distance):
         num_classes, _, _ = registry.get_dataset(name=args.dataset, data_root=args.data_root)
         dataset_location = os.path.join(os.path.dirname(__file__), '../', args.dataset.upper())
@@ -240,15 +240,13 @@ def main():
         student_scratch_dst = prediction_distance(scratch_student, student,
                                 dataset_root=dataset_location,
                                 batch_size=args.batch_size, num_workers=args.workers)
-        """ for class_idx, mean_distance in teacher_student_dst.items():
-            wandb.log({"Avg Teacher-Student per Class": mean_distance})
-        for class_idx, mean_distance in student_scratch_dst.items():
-            wandb.log({"Avg Student-Scratch per Class": mean_distance}, step=class_idx)
-        """
-        wandb.log({
-            "Teacher-Student mean Prediction Distance": [teacher_student_dst[k] for k in teacher_student_dst.keys()],
-            "Student-Scratch mean Prediction Distance": [student_scratch_dst[k] for k in student_scratch_dst.keys()]
-        })
+        
+        #garantisce che le classi siano le stesse (e ordinate)
+        classes = sorted(set(teacher_student_dst) | set(student_scratch_dst))
+        for class_idx in classes:
+            wandb.log({ "Avg Distance/Teacher‑Student":   teacher_student_dst.get(class_idx),
+                        "Avg Distance/Student‑Scratch":  student_scratch_dst.get(class_idx),
+                      }, step=class_idx)
 
 
     if(args.TSNE):

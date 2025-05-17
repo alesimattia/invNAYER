@@ -1,13 +1,15 @@
+import torch
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+import numpy as np
+from sklearn.metrics import pairwise_distances
+
+
 def prediction_distance(teacher, student, dataset_root='../CIFAR10', batch_size=512, num_workers=4):
     """
     Calcola la distanza media tra le predizioni del modello teacher e quelle del modello studente per ogni classe.
+    - Rallenta l'esecuzione
     """
-
-    import torch
-    import torchvision.transforms as transforms
-    import torchvision.datasets as datasets
-    import numpy as np
-    from sklearn.metrics import pairwise_distances
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     teacher = teacher.to(device).eval()
