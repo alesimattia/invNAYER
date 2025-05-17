@@ -28,7 +28,9 @@ import torchvision.models as models
 import wandb
 from datafree.metrics.generated_img_quality import inception_score_from_folder
 from datafree.metrics.PCA import model_PCA
+from datafree.metrics.TSNE import compute_TSNE
 from datafree.metrics.prediction_distance import prediction_distance
+
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
 
@@ -42,6 +44,7 @@ parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coe
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
 parser.add_argument('--PCA', type=int, default=0, help='Apply PCA and 3Dplot')
 parser.add_argument('--savedStudent', type=str, default='', help='Path to pre-trained .pth model (for PCA)')
+parser.add_argument('--TSNE', default=False, action=argparse.BooleanOptionalAction, help='Compute TSNE and plot 2D graph')
 parser.add_argument('--distance', default=False, action=argparse.BooleanOptionalAction, help='Compute teacher and student predictions distance')
 
 # Data Free
@@ -242,6 +245,26 @@ def main():
             wandb.log({"Avg Teacher-Student per Class": mean_distance}, step=class_idx)
         for class_idx, mean_distance in student_scratch_dst.items():
             wandb.log({"Avg Student-Scratch per Class": mean_distance}, step=class_idx)
+
+    if(args.TSNE):
+        teacher_img = compute_TSNE(teacher,
+            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset),
+            batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png"
+        )
+        wandb.log({"Teacher TSNE": wandb.Image(teacher_img)})
+
+        student_img = compute_TSNE(student,
+            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset),
+            batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/student_TSNE.png"
+        )
+        wandb.log({"Student TSNE": wandb.Image(student_img)})
+        
+        scratch_student_img = compute_TSNE(scratch_student,
+            dataset_root=os.path.join(os.path.dirname(__file__), '../', args.dataset),
+            batch_size=args.batch_size, num_workers=args.workers, output_path="./TSNE_img/scratch_student_TSNE.png"
+        )
+        wandb.log({"Scratch Student TSNE": wandb.Image(scratch_student_img)})
+
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1

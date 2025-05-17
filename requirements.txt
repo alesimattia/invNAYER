@@ -13,3 +13,4 @@ pandas
 importlib_metadata
 xlsxwriter
 mpl-tools
+tsnecuda
