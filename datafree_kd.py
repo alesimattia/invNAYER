@@ -244,10 +244,15 @@ def main():
         # for class_idx, mean_distance in student_scratch_dst.items():
         #     args.logger.info({"LOG Avg Student-Scratch per Class": mean_distance})
         #     wandb.log({"Avg Student-Scratch per Class": mean_distance}, step=class_idx)
-        for class_idx, mean_distance in teacher_student_dst.items():
-            wandb.log({"Avg Teacher-Student per Class": mean_distance}, step=class_idx)
+        """ for class_idx, mean_distance in teacher_student_dst.items():
+            wandb.log({"Avg Teacher-Student per Class": mean_distance})
         for class_idx, mean_distance in student_scratch_dst.items():
             wandb.log({"Avg Student-Scratch per Class": mean_distance}, step=class_idx)
+        """
+        wandb.log({
+            "Teacher-Student mean Prediction Distance": [teacher_student_dst[k] for k in sorted(teacher_student_dst.keys())],
+            "Student-Scratch mean Prediction Distance": [student_scratch_dst[k] for k in sorted(student_scratch_dst.keys())]
+        })
 
     if(args.TSNE):
         teacher_img = compute_TSNE(teacher,
