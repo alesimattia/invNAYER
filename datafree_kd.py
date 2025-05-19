@@ -246,7 +246,7 @@ def main():
         for class_idx in classes:
             wandb.log({ "Avg Prediction Distance Teacher‑Student":   teacher_student_dst.get(class_idx),
                         "Avg Prediction Distance Student‑Scratch":  student_scratch_dst.get(class_idx),
-                      }, step=class_idx+1)
+                      })
 
     if(args.TSNE):
         teacher_img = compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
@@ -261,6 +261,8 @@ def main():
                                            num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png" )
         wandb.log({"Scratch Student TSNE": wandb.Image(scratch_student_img)})
 
+    args.logger.info(f"Wandb run location: {wandb.run.dir}")
+    os.system(f"wandb sync ./{wandb.run.dir}")
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
