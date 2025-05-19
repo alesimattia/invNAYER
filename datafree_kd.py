@@ -261,8 +261,8 @@ def main():
                                            num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png" )
         wandb.log({"Scratch Student TSNE": wandb.Image(scratch_student_img)})
 
-    args.logger.info(f"Wandb run location: {wandb.run.dir}")
-    os.system(f"wandb sync ./{wandb.run.dir}")
+    args.logger.info(f"Wandb run location: {wandb.run.path}")
+    os.system(f"wandb sync ./{wandb.run.dir}/..") #rimuove "/files"
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
