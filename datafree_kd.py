@@ -220,17 +220,17 @@ def main():
         teacher_img = model_PCA(teacher, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
                 dataset_root=dataset_location,
                 output_path=f"./PCA_img/teacher_PCA.png")
-        wandb.log({"Teacher_PCA": wandb.Image(teacher_img)})
+        wandb.log({"Teacher PCA": wandb.Image(teacher_img)})
 
         student_img = model_PCA(student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
                 dataset_root=dataset_location,
                 output_path=f"./PCA_img/{args.savedStudent}_PCA.png")
-        wandb.log({"Student_PCA": wandb.Image(student_img)})
+        wandb.log({"Student PCA": wandb.Image(student_img)})
 
         scratch_student_img = model_PCA(scratch_student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
                 dataset_root=dataset_location,
                 output_path=f"./PCA_img/scratchStudent_PCA.png")
-        wandb.log({"Scratch_Student_PCA": wandb.Image(scratch_student_img)})
+        wandb.log({"Scratch_Student PCA": wandb.Image(scratch_student_img)})
 
 
     if(args.distance):
@@ -244,13 +244,12 @@ def main():
         #garantisce che le classi siano le stesse (e ordinate)
         classes = sorted(set(teacher_student_dst) | set(student_scratch_dst))
         for class_idx in classes:
-            wandb.log({ "Avg Distance/Teacher‑Student":   teacher_student_dst.get(class_idx),
-                        "Avg Distance/Student‑Scratch":  student_scratch_dst.get(class_idx),
-                      }, step=class_idx)
-
+            wandb.log({ "Avg Prediction Distance Teacher‑Student":   teacher_student_dst.get(class_idx),
+                        "Avg Prediction Distance Student‑Scratch":  student_scratch_dst.get(class_idx),
+                      }, step=class_idx-1)
 
     if(args.TSNE):
-        teacher_img = compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size, 
+        teacher_img = compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
                                    num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png" )
         wandb.log({"Teacher TSNE": wandb.Image(teacher_img)})
 
