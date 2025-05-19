@@ -63,7 +63,7 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
     ax.legend()
 
     plt.savefig(output_path)
-    print(f"PCA 3Dgraph saved to: {output_path}")
+    print(f"PCA 3Dplot salvato in: {output_path}")
     plt.close(fig)
 
     return fig

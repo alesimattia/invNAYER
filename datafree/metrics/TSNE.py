@@ -38,7 +38,7 @@ def compute_TSNE(model, dataset_root, batch_size=512, num_workers=4, output_path
     tsne = TSNE(n_components=2, random_state=42)
     features_tsne = tsne.fit_transform(features)
 
-    # Plot
+
     fig, ax = plt.subplots(figsize=(10, 8))
     colors = plt.cm.get_cmap("tab10", 10)
     for class_idx in range(10):
@@ -51,5 +51,5 @@ def compute_TSNE(model, dataset_root, batch_size=512, num_workers=4, output_path
     plt.tight_layout()
     plt.savefig(output_path)
     
-    print(f"TSNE plot creato")
+    print(f"TSNE plot salvato in: {output_path}")
     return fig

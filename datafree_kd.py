@@ -246,7 +246,7 @@ def main():
         for class_idx in classes:
             wandb.log({ "Avg Prediction Distance Teacher‑Student":   teacher_student_dst.get(class_idx),
                         "Avg Prediction Distance Student‑Scratch":  student_scratch_dst.get(class_idx),
-                      }, step=class_idx-1)
+                      }, step=class_idx+1)
 
     if(args.TSNE):
         teacher_img = compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
