@@ -296,6 +296,7 @@ def train(train_loader, model, criterion, optimizer, args):
             target = target.cuda(args.gpu, non_blocking=True)
         with args.autocast(enabled=args.fp16):
             output = model(images)
+            #add output 
             loss = criterion(output, target)
         # measure accuracy and record loss
         acc_metric.update(output, target)

@@ -1,19 +1,9 @@
-import argparse
+import os, glob, random, shutil, warnings, subprocess, registry, datafree, argparse, pickle, time
 from math import gamma
-import os
-import glob
-import random
-import shutil
-import warnings
-
-import registry
-import datafree
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import pickle
-import time
 
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
@@ -22,14 +12,14 @@ import torch.optim
 import torch.multiprocessing as mp
 import torch.utils.data
 import torch.utils.data.distributed
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
 import torchvision.models as models
 import wandb
+
 from datafree.metrics.generated_img_quality import inception_score_from_folder
 from datafree.metrics.PCA import model_PCA
 from datafree.metrics.TSNE import compute_TSNE
-from datafree.metrics.prediction_distance import prediction_distance
+from datafree.metrics.model_comparator import Comparator
+from datafree.metrics.confusionMatrix import confusion_matrix
 
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
@@ -42,10 +32,14 @@ parser.add_argument('--r_feature', type=float, default=0.05, help='coefficient f
 parser.add_argument('--first_bn_multiplier', type=float, default=10., help='additional multiplier on first bn layer of R_feature')
 parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coefficient for the main loss in optimization')
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
-parser.add_argument('--PCA', type=int, default=0, help='Apply PCA and 3Dplot')
-parser.add_argument('--savedStudent', type=str, default='', help='Path to pre-trained .pth model (for PCA)')
+parser.add_argument('--PCA', type=int, default=1, help='Apply PCA and 3Dplot')
+parser.add_argument('--nayerStudent', type=str, default='', help='Path to pre-trained .pth model')
+parser.add_argument('--KDstudent', type=str, default='', help='Path to pre-trained .pth model')
 parser.add_argument('--TSNE', default=False, action=argparse.BooleanOptionalAction, help='Compute TSNE and plot 2D graph')
 parser.add_argument('--distance', default=False, action=argparse.BooleanOptionalAction, help='Compute teacher and student predictions distance')
+parser.add_argument('--DICE', default=False, action=argparse.BooleanOptionalAction, help='Compute DICE coefficient')
+parser.add_argument('--confusion', default=False, action=argparse.BooleanOptionalAction, help='Plot and save confusion matrix')
+parser.add_argument('--JSindex', default=False, action=argparse.BooleanOptionalAction, help='Compute Jensen-Shannon index between two models')
 
 # Data Free
 parser.add_argument('--method', default='nldf')
@@ -201,67 +195,133 @@ def main():
         #Altrimenti salta
 
     #
-    ### METRICHE
     #
-    if(args.PCA or args.TSNE or args.distance):
+    ### VALUTAZIONE MODELLI
+    #
+    #
+    if(args.PCA or args.TSNE or args.distance or args.DICE):
         num_classes, _, _ = registry.get_dataset(name=args.dataset, data_root=args.data_root)
         dataset_location = os.path.join(os.path.dirname(__file__), '../', args.dataset.upper())
 
         #Caricamento modelli pre-addestrati
         teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
         teacher.load_state_dict(torch.load(f'./checkpoints/pretrained/{args.dataset}_{args.teacher}.pth', map_location='cpu')['state_dict'])
-        student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
-        student.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.savedStudent}.pth', map_location='cpu')['state_dict'])
-        scratch_student = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()                                                                                            #epoche di esecuzione != epoche traon studente scratch
-        scratch_student.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth', map_location='cpu')['state_dict'])
-        
+        nayerStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
+        nayerStudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.nayerStudent}.pth', map_location='cpu')['state_dict'])
+        scratchStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()                                                                                            #epoche di esecuzione != epoche traon studente scratch
+        scratchStudent.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth', map_location='cpu')['state_dict'])
+        kdStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
+        kdStudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.KDstudent}.pth', map_location='cpu')['state_dict'])
+
+        teacher_nayerStud_Comparator = Comparator(teacher, nayerStudent, dataset_location, args.batch_size, args.workers)
+        kdStud_nayerStud_Comparator = Comparator(kdStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
+        scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
 
     if(args.PCA):
         teacher_img = model_PCA(teacher, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
                 dataset_root=dataset_location,
                 output_path=f"./PCA_img/teacher_PCA.png")
-        wandb.log({"Teacher PCA": wandb.Image(teacher_img)})
-
-        student_img = model_PCA(student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
+        
+        nayerStudent_img = model_PCA(nayerStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
                 dataset_root=dataset_location,
-                output_path=f"./PCA_img/{args.savedStudent}_PCA.png")
-        wandb.log({"Student PCA": wandb.Image(student_img)})
-
-        scratch_student_img = model_PCA(scratch_student, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
+                output_path=f"./PCA_img/{args.nayerStudent}_PCA.png")
+        
+        scratchStudent_img = model_PCA(scratchStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
                 dataset_root=dataset_location,
                 output_path=f"./PCA_img/scratchStudent_PCA.png")
-        wandb.log({"Scratch_Student PCA": wandb.Image(scratch_student_img)})
+        
+        kdStudent_img = model_PCA(kdStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
+                dataset_root=dataset_location,
+                output_path=f"./PCA_img/{args.KDstudent}_PCA.png")
+        
+        wandb.log({
+                    "Teacher PCA": wandb.Image(teacher_img),
+                    "NAYER Student  PCA": wandb.Image(nayerStudent_img),
+                    "Scratch Student PCA": wandb.Image(scratchStudent_img),
+                    "KD Student PCA": wandb.Image(kdStudent_img)
+                })
 
 
     if(args.distance):
-        teacher_student_dst = prediction_distance(teacher, student,
+        teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(teacher, nayerStudent,
                                 dataset_root=dataset_location,
                                 batch_size=args.batch_size, num_workers=args.workers)
-        student_scratch_dst = prediction_distance(scratch_student, student,
+        scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(scratchStudent, nayerStudent,
                                 dataset_root=dataset_location,
                                 batch_size=args.batch_size, num_workers=args.workers)
-        
-        #garantisce che le classi siano le stesse (e ordinate)
-        classes = sorted(set(teacher_student_dst) | set(student_scratch_dst))
-        for class_idx in classes:
-            wandb.log({ "Avg Prediction Distance Teacher‑Student":   teacher_student_dst.get(class_idx),
-                        "Avg Prediction Distance Student‑Scratch":  student_scratch_dst.get(class_idx),
-                      })
+        kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(kdStudent, nayerStudent,
+                                dataset_root=dataset_location,
+                                batch_size=args.batch_size, num_workers=args.workers)
+        kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance(kdStudent, scratchStudent,
+                                dataset_root=dataset_location,
+                                batch_size=args.batch_size, num_workers=args.workers)
+        wandb.log({
+            "Prediction Distance Teacher‑Student (per class)": wandb.Histogram([teacher_student_dst[k] for k in sorted(teacher_student_dst.keys())]),
+            "Prediction Distance StudentNayer-Scratch (per class)": wandb.Histogram([scratchStudent_nayerStudent_dst[k] for k in sorted(scratchStudent_nayerStudent_dst.keys())]),
+            "Prediction Distance KDStudent-NayerStudent (per class)": wandb.Histogram([kdStudent_nayerStudent_dst[k] for k in sorted(kdStudent_nayerStudent_dst.keys())]),
+            "Prediction Distance KDStudent-ScratchStudent (per class)": wandb.Histogram([kdStudent_scratchStudent_dst[k] for k in sorted(kdStudent_scratchStudent_dst.keys())])
+        })
+
 
     if(args.TSNE):
         teacher_img = compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
                                    num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png" )
-        wandb.log({"Teacher TSNE": wandb.Image(teacher_img)})
-
-        student_img = compute_TSNE(student, dataset_root=dataset_location, batch_size=args.batch_size, 
-                                   num_workers=args.workers, output_path="./TSNE_img/student_TSNE.png" )
-        wandb.log({"Student TSNE": wandb.Image(student_img)})
         
-        scratch_student_img = compute_TSNE(scratch_student, dataset_root=dataset_location, batch_size=args.batch_size, 
+        nayerStudent_img = compute_TSNE(nayerStudent, dataset_root=dataset_location, batch_size=args.batch_size,
+                                   num_workers=args.workers, output_path="./TSNE_img/student_TSNE.png" )
+        
+        scratchStudent_img = compute_TSNE(scratchStudent, dataset_root=dataset_location, batch_size=args.batch_size, 
                                            num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png" )
-        wandb.log({"Scratch Student TSNE": wandb.Image(scratch_student_img)})
+        
+        kdStudent_img = compute_TSNE(kdStudent, dataset_root=dataset_location, batch_size=args.batch_size,
+                                   num_workers=args.workers, output_path="./TSNE_img/kdStudent_TSNE.png" )
+        
+        wandb.log({
+                    "Teacher TSNE": wandb.Image(teacher_img),
+                    "Student NAYER TSNE": wandb.Image(nayerStudent_img),
+                    "Scratch Student TSNE": wandb.Image(scratchStudent_img),
+                    "KD Student TSNE": wandb.Image(kdStudent_img)
+                })
 
-    os.system(f"wandb sync {wandb.run.dir}/..") #rimuove "/files"
+
+    if(args.DICE):
+        teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient(teacher, nayerStudent, dataset_root=dataset_location)
+        kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient(kdStudent, nayerStudent, dataset_root=dataset_location)
+        scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient(scratchStudent, nayerStudent, dataset_root=dataset_location)
+        
+        wandb.log({
+                    "Teacher‑NayerStudent DICE score (per class)": wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE.keys())]),
+                    "kdStudent-NayerStudent DICE score (per class)": wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE.keys())]),
+                    "ScratchStudent-NayerStudent DICE score (per class)": wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE.keys())])
+                })
+        
+
+    if(args.confusion):
+        confusion_matrix(teacher, dataset_location, batch_size=args.batch_size, 
+                         output_path=f'./ConfusionMatrix/{teacher}confusion_matrix.png')
+        confusion_matrix(nayerStudent, dataset_location, batch_size=args.batch_size,
+                         output_path=f'./ConfusionMatrix/{nayerStudent}confusion_matrix.png')
+        confusion_matrix(scratchStudent, dataset_location, batch_size=args.batch_size,
+                         output_path=f'./ConfusionMatrix/{scratchStudent}confusion_matrix.png')
+        confusion_matrix(kdStudent, dataset_location, batch_size=args.batch_size,
+                         output_path=f'./ConfusionMatrix/{kdStudent}confusion_matrix.png')
+
+    if(args.JSindex):
+        teacher_nayerStud_JS = teacher_nayerStud_Comparator.jensen_Shannon_index(teacher, nayerStudent, dataset_root=dataset_location,
+                                                         batch_size=args.batch_size, num_workers=args.workers)
+        kdStud_nayerStud_JS = kdStud_nayerStud_Comparator.jensen_Shannon_index(kdStudent, nayerStudent, dataset_root=dataset_location,
+                                                         batch_size=args.batch_size, num_workers=args.workers)
+        scratchStud_nayerStud_JS = scratchStud_nayerStud_Comparator.jensen_Shannon_index(scratchStudent, nayerStudent, dataset_root=dataset_location,
+                                                         batch_size=args.batch_size, num_workers=args.workers)
+        
+        wandb.log({"Jensen-Shannon Index - Teacher/NayerStudent": teacher_nayerStud_JS,
+                    "Jensen-Shannon Index - KDStudent/NayerStudent": kdStud_nayerStud_JS,
+                    "Jensen-Shannon Index - ScratchStudent/NayerStudent": scratchStud_nayerStud_JS})
+        
+    result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
+    print(result.stdout)
+
+
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
@@ -498,6 +558,7 @@ def main_worker(gpu, ngpus_per_node, args):
         tm = time.time()
         args.current_epoch = epoch
 
+        #saltare per studente KD   
         vis_results, cost, loss_synthesizer, loss_oh, loss_var_l1, loss_var_l2, loss_l2, loss_bn, loss_adv = synthesizer.synthesize()  # g_steps
         # if vis_results is not None:
         #     for vis_name, vis_image in vis_results.items():
@@ -514,6 +575,7 @@ def main_worker(gpu, ngpus_per_node, args):
             del vis_results
             # del vis_image
             # del vis_name
+            #modificare train con dataloader al posto di synthes.
             train(synthesizer, [student, teacher], criterion, optimizer, args)  # kd_steps
         tm = time.time() - tm
 
@@ -559,9 +621,40 @@ def main_worker(gpu, ngpus_per_node, args):
         args.logger.info("Generation Cost: %1.3f" % (time_cost / 3600.))
     return teacher, student, synthesizer, evaluator
 
+'''
+dataLoader
 
+ num_classes, train_dataset, val_dataset = registry.get_dataset(name=args.dataset, data_root=args.data_root)
+    cudnn.benchmark = True
+    if args.distributed:
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
+    else:
+        train_sampler = None
+    dataLoader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
+        num_workers=args.workers, pin_memory=True, sampler=train_sampler)
+    evaluator = datafree.evaluators.classification_evaluator(val_loader)
+    args.current_epoch = 0
+'''
+
+''''
+def train(train_loader, model, criterion, optimizer, args):
+    global best_acc1
+    loss_metric = datafree.metrics.RunningLoss(nn.CrossEntropyLoss(reduction='sum'))
+    acc_metric = datafree.metrics.TopkAccuracy(topk=(1,5))
+    model.train()
+    for i, (images, target) in enumerate(train_loader):
+        if args.gpu is not None:
+            images = images.cuda(args.gpu, non_blocking=True)
+        if torch.cuda.is_available():
+            target = target.cuda(args.gpu, non_blocking=True)
+        with args.autocast(enabled=args.fp16):
+            output = model(images)
+            #add output 
+            *****loss_crossE**** = criterion(output, target)
+    '''
 # do the distillation
-def train(synthesizer, model, criterion, optimizer, args):
+def train(synthesizer, model, criterion, optimizer, args, dataLoader = None):
     global time_cost
     loss_metric = datafree.metrics.RunningLoss(datafree.criterions.KLDiv(reduction='sum'))
     acc_metric = datafree.metrics.TopkAccuracy(topk=(1, 5))
@@ -583,6 +676,11 @@ def train(synthesizer, model, criterion, optimizer, args):
             s_out = student(images.detach())
             loss_s = criterion(s_out, t_out.detach())
 
+            #distillazione "classica" con addestramento studente con gli stessi dati dell'insegnante
+            #new_criterion = nn.CrossEntropyLoss().cuda(args.gpu)
+            #loss_crossE = new_criterion(s_out, target)
+            #main_loss = "alpha"*loss_crossE + "1-alpha"*loss_s => magari sovrascrivere ni modo da non modificare tutto il resto
+            
         optimizer.zero_grad()
         if args.fp16:
             scaler_s = args.scaler_s

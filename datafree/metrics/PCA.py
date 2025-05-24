@@ -37,7 +37,7 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
     with torch.no_grad():
         for images, targets in test_loader:
             images = images.to(device)
-            outputs = model(images, return_features=True)[1]  # Classificazione
+            outputs = model(images, return_features=True)[0]  # Layer Fully connected resnet.py:96
             features.append(outputs.cpu().numpy())
             labels.append(targets.numpy())
 
