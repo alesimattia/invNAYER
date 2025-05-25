@@ -46,6 +46,11 @@ parser.add_argument('--method', default='nldf')
 parser.add_argument('--adv', default=1.33, type=float, help='scaling factor for adversarial distillation')
 parser.add_argument('--bn', default=10, type=float, help='scaling factor for BN regularization')
 parser.add_argument('--oh', default=0.5, type=float, help='scaling factor for one hot loss (cross entropy)')
+
+parser.add_argument('--train_distilled_student', default=False, action=argparse.BooleanOptionalAction, help='Addestra uno studente distillato con BCE+KL')
+parser.add_argument('--alpha', default=0.2, type=float, help='Bilanciamento tra BCE loss (teacher) e KL loss (nayer student)')
+parser.add_argument('--nayer_student_ckpt', default="./c10r34r18-tvL2-0.001__l2-0.1", type=str, help='Path allo studente preaddestrato NAYER .pth')
+
 # TODO: optimize contr. now set to 0.5
 parser.add_argument('--contr', default=0.5, type=float, help='scaling factor for contrastive loss (augmentation-based)')
 parser.add_argument('--act', default=0, type=float, help='scaling factor for activation loss used in DAFL')
@@ -206,9 +211,9 @@ def main():
         #Caricamento modelli pre-addestrati
         teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
         teacher.load_state_dict(torch.load(f'./checkpoints/pretrained/{args.dataset}_{args.teacher}.pth', map_location='cpu')['state_dict'])
-        nayerStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
-        nayerStudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.nayerStudent}.pth', map_location='cpu')['state_dict'])
-        scratchStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()                                                                                            #epoche di esecuzione != epoche traon studente scratch
+        nayerStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval() #best_c10r34r18-tvL2-0.0005__l2-0.00001
+        nayerStudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.nayerStudent}.pth', map_location='cpu')['state_dict']) 
+        scratchStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval() #epoche di esecuzione != epoche train studente scratch 
         scratchStudent.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth', map_location='cpu')['state_dict'])
         kdStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
         kdStudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.KDstudent}.pth', map_location='cpu')['state_dict'])
@@ -217,109 +222,109 @@ def main():
         kdStud_nayerStud_Comparator = Comparator(kdStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
         scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
 
-    if(args.PCA):
-        teacher_img = model_PCA(teacher, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
-                dataset_root=dataset_location,
-                output_path=f"./PCA_img/teacher_PCA.png")
-        
-        nayerStudent_img = model_PCA(nayerStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
-                dataset_root=dataset_location,
-                output_path=f"./PCA_img/{args.nayerStudent}_PCA.png")
-        
-        scratchStudent_img = model_PCA(scratchStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
-                dataset_root=dataset_location,
-                output_path=f"./PCA_img/scratchStudent_PCA.png")
-        
-        kdStudent_img = model_PCA(kdStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
-                dataset_root=dataset_location,
-                output_path=f"./PCA_img/{args.KDstudent}_PCA.png")
-        
-        wandb.log({
-                    "Teacher PCA": wandb.Image(teacher_img),
-                    "NAYER Student  PCA": wandb.Image(nayerStudent_img),
-                    "Scratch Student PCA": wandb.Image(scratchStudent_img),
-                    "KD Student PCA": wandb.Image(kdStudent_img)
-                })
+        if(args.PCA):
+            teacher_img = model_PCA(teacher, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
+                    dataset_root=dataset_location,
+                    output_path=f"./PCA_img/teacher_PCA.png")
+            
+            nayerStudent_img = model_PCA(nayerStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
+                    dataset_root=dataset_location,
+                    output_path=f"./PCA_img/{args.nayerStudent}_PCA.png")
+            
+            scratchStudent_img = model_PCA(scratchStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
+                    dataset_root=dataset_location,
+                    output_path=f"./PCA_img/scratchStudent_PCA.png")
+            
+            kdStudent_img = model_PCA(kdStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
+                    dataset_root=dataset_location,
+                    output_path=f"./PCA_img/{args.KDstudent}_PCA.png")
+            
+            wandb.log({
+                        "Teacher PCA": wandb.Image(teacher_img),
+                        "NAYER Student  PCA": wandb.Image(nayerStudent_img),
+                        "Scratch Student PCA": wandb.Image(scratchStudent_img),
+                        "KD Student PCA": wandb.Image(kdStudent_img)
+                    })
 
 
-    if(args.distance):
-        teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(teacher, nayerStudent,
-                                dataset_root=dataset_location,
-                                batch_size=args.batch_size, num_workers=args.workers)
-        scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(scratchStudent, nayerStudent,
-                                dataset_root=dataset_location,
-                                batch_size=args.batch_size, num_workers=args.workers)
-        kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(kdStudent, nayerStudent,
-                                dataset_root=dataset_location,
-                                batch_size=args.batch_size, num_workers=args.workers)
-        kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance(kdStudent, scratchStudent,
-                                dataset_root=dataset_location,
-                                batch_size=args.batch_size, num_workers=args.workers)
-        wandb.log({
-            "Prediction Distance Teacher‑Student (per class)": wandb.Histogram([teacher_student_dst[k] for k in sorted(teacher_student_dst.keys())]),
-            "Prediction Distance StudentNayer-Scratch (per class)": wandb.Histogram([scratchStudent_nayerStudent_dst[k] for k in sorted(scratchStudent_nayerStudent_dst.keys())]),
-            "Prediction Distance KDStudent-NayerStudent (per class)": wandb.Histogram([kdStudent_nayerStudent_dst[k] for k in sorted(kdStudent_nayerStudent_dst.keys())]),
-            "Prediction Distance KDStudent-ScratchStudent (per class)": wandb.Histogram([kdStudent_scratchStudent_dst[k] for k in sorted(kdStudent_scratchStudent_dst.keys())])
-        })
+        if(args.distance):
+            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(teacher, nayerStudent,
+                                    dataset_root=dataset_location,
+                                    batch_size=args.batch_size, num_workers=args.workers)
+            scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(scratchStudent, nayerStudent,
+                                    dataset_root=dataset_location,
+                                    batch_size=args.batch_size, num_workers=args.workers)
+            kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(kdStudent, nayerStudent,
+                                    dataset_root=dataset_location,
+                                    batch_size=args.batch_size, num_workers=args.workers)
+            kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance(kdStudent, scratchStudent,
+                                    dataset_root=dataset_location,
+                                    batch_size=args.batch_size, num_workers=args.workers)
+            wandb.log({
+                "Prediction Distance Teacher‑Student (per class)": wandb.Histogram([teacher_student_dst[k] for k in sorted(teacher_student_dst.keys())]),
+                "Prediction Distance StudentNayer-Scratch (per class)": wandb.Histogram([scratchStudent_nayerStudent_dst[k] for k in sorted(scratchStudent_nayerStudent_dst.keys())]),
+                "Prediction Distance KDStudent-NayerStudent (per class)": wandb.Histogram([kdStudent_nayerStudent_dst[k] for k in sorted(kdStudent_nayerStudent_dst.keys())]),
+                "Prediction Distance KDStudent-ScratchStudent (per class)": wandb.Histogram([kdStudent_scratchStudent_dst[k] for k in sorted(kdStudent_scratchStudent_dst.keys())])
+            })
 
 
-    if(args.TSNE):
-        teacher_img = compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
-                                   num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png" )
-        
-        nayerStudent_img = compute_TSNE(nayerStudent, dataset_root=dataset_location, batch_size=args.batch_size,
-                                   num_workers=args.workers, output_path="./TSNE_img/student_TSNE.png" )
-        
-        scratchStudent_img = compute_TSNE(scratchStudent, dataset_root=dataset_location, batch_size=args.batch_size, 
-                                           num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png" )
-        
-        kdStudent_img = compute_TSNE(kdStudent, dataset_root=dataset_location, batch_size=args.batch_size,
-                                   num_workers=args.workers, output_path="./TSNE_img/kdStudent_TSNE.png" )
-        
-        wandb.log({
-                    "Teacher TSNE": wandb.Image(teacher_img),
-                    "Student NAYER TSNE": wandb.Image(nayerStudent_img),
-                    "Scratch Student TSNE": wandb.Image(scratchStudent_img),
-                    "KD Student TSNE": wandb.Image(kdStudent_img)
-                })
+        if(args.TSNE):
+            teacher_img = compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
+                                    num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png" )
+            
+            nayerStudent_img = compute_TSNE(nayerStudent, dataset_root=dataset_location, batch_size=args.batch_size,
+                                    num_workers=args.workers, output_path="./TSNE_img/student_TSNE.png" )
+            
+            scratchStudent_img = compute_TSNE(scratchStudent, dataset_root=dataset_location, batch_size=args.batch_size, 
+                                            num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png" )
+            
+            kdStudent_img = compute_TSNE(kdStudent, dataset_root=dataset_location, batch_size=args.batch_size,
+                                    num_workers=args.workers, output_path="./TSNE_img/kdStudent_TSNE.png" )
+            
+            wandb.log({
+                        "Teacher TSNE": wandb.Image(teacher_img),
+                        "Student NAYER TSNE": wandb.Image(nayerStudent_img),
+                        "Scratch Student TSNE": wandb.Image(scratchStudent_img),
+                        "KD Student TSNE": wandb.Image(kdStudent_img)
+                    })
 
 
-    if(args.DICE):
-        teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient(teacher, nayerStudent, dataset_root=dataset_location)
-        kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient(kdStudent, nayerStudent, dataset_root=dataset_location)
-        scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient(scratchStudent, nayerStudent, dataset_root=dataset_location)
-        
-        wandb.log({
-                    "Teacher‑NayerStudent DICE score (per class)": wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE.keys())]),
-                    "kdStudent-NayerStudent DICE score (per class)": wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE.keys())]),
-                    "ScratchStudent-NayerStudent DICE score (per class)": wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE.keys())])
-                })
-        
+        if(args.DICE):
+            teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient(teacher, nayerStudent, dataset_root=dataset_location)
+            kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient(kdStudent, nayerStudent, dataset_root=dataset_location)
+            scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient(scratchStudent, nayerStudent, dataset_root=dataset_location)
+            
+            wandb.log({
+                        "Teacher‑NayerStudent DICE score (per class)": wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE.keys())]),
+                        "kdStudent-NayerStudent DICE score (per class)": wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE.keys())]),
+                        "ScratchStudent-NayerStudent DICE score (per class)": wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE.keys())])
+                    })
+            
 
-    if(args.confusion):
-        confusion_matrix(teacher, dataset_location, batch_size=args.batch_size, 
-                         output_path=f'./ConfusionMatrix/{teacher}confusion_matrix.png')
-        confusion_matrix(nayerStudent, dataset_location, batch_size=args.batch_size,
-                         output_path=f'./ConfusionMatrix/{nayerStudent}confusion_matrix.png')
-        confusion_matrix(scratchStudent, dataset_location, batch_size=args.batch_size,
-                         output_path=f'./ConfusionMatrix/{scratchStudent}confusion_matrix.png')
-        confusion_matrix(kdStudent, dataset_location, batch_size=args.batch_size,
-                         output_path=f'./ConfusionMatrix/{kdStudent}confusion_matrix.png')
+        if(args.confusion):
+            confusion_matrix(teacher, dataset_location, batch_size=args.batch_size, 
+                            output_path=f'./ConfusionMatrix/{teacher}confusion_matrix.png')
+            confusion_matrix(nayerStudent, dataset_location, batch_size=args.batch_size,
+                            output_path=f'./ConfusionMatrix/{nayerStudent}confusion_matrix.png')
+            confusion_matrix(scratchStudent, dataset_location, batch_size=args.batch_size,
+                            output_path=f'./ConfusionMatrix/{scratchStudent}confusion_matrix.png')
+            confusion_matrix(kdStudent, dataset_location, batch_size=args.batch_size,
+                            output_path=f'./ConfusionMatrix/{kdStudent}confusion_matrix.png')
 
-    if(args.JSindex):
-        teacher_nayerStud_JS = teacher_nayerStud_Comparator.jensen_Shannon_index(teacher, nayerStudent, dataset_root=dataset_location,
-                                                         batch_size=args.batch_size, num_workers=args.workers)
-        kdStud_nayerStud_JS = kdStud_nayerStud_Comparator.jensen_Shannon_index(kdStudent, nayerStudent, dataset_root=dataset_location,
-                                                         batch_size=args.batch_size, num_workers=args.workers)
-        scratchStud_nayerStud_JS = scratchStud_nayerStud_Comparator.jensen_Shannon_index(scratchStudent, nayerStudent, dataset_root=dataset_location,
-                                                         batch_size=args.batch_size, num_workers=args.workers)
-        
-        wandb.log({"Jensen-Shannon Index - Teacher/NayerStudent": teacher_nayerStud_JS,
-                    "Jensen-Shannon Index - KDStudent/NayerStudent": kdStud_nayerStud_JS,
-                    "Jensen-Shannon Index - ScratchStudent/NayerStudent": scratchStud_nayerStud_JS})
-        
-    result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
-    print(result.stdout)
+        if(args.JSindex):
+            teacher_nayerStud_JS = teacher_nayerStud_Comparator.jensen_Shannon_index(teacher, nayerStudent, dataset_root=dataset_location,
+                                                            batch_size=args.batch_size, num_workers=args.workers)
+            kdStud_nayerStud_JS = kdStud_nayerStud_Comparator.jensen_Shannon_index(kdStudent, nayerStudent, dataset_root=dataset_location,
+                                                            batch_size=args.batch_size, num_workers=args.workers)
+            scratchStud_nayerStud_JS = scratchStud_nayerStud_Comparator.jensen_Shannon_index(scratchStudent, nayerStudent, dataset_root=dataset_location,
+                                                            batch_size=args.batch_size, num_workers=args.workers)
+            
+            wandb.log({"Jensen-Shannon Index - Teacher/NayerStudent": teacher_nayerStud_JS,
+                        "Jensen-Shannon Index - KDStudent/NayerStudent": kdStud_nayerStud_JS,
+                        "Jensen-Shannon Index - ScratchStudent/NayerStudent": scratchStud_nayerStud_JS})
+            
+        result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
+        print(result.stdout)
 
 
 
@@ -436,6 +441,13 @@ def main_worker(gpu, ngpus_per_node, args):
 
     student = registry.get_model(args.student, num_classes=num_classes)
     teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
+
+    if(args.train_distilled_student):
+        nayerStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
+        nayerStudent.load_state_dict(torch.load(args.nayer_student_ckpt, map_location='cpu')['state_dict'])
+        nayerStudent = prepare_model(nayerStudent)
+
+
     args.normalizer = datafree.utils.Normalizer(**registry.NORMALIZE_DICT[args.dataset])
     # pretrain = torch.load('checkpoints/pretrained/%s_%s.pth' % (args.dataset, args.teacher),
     #                                    map_location='cpu')['state_dict']
@@ -708,6 +720,9 @@ def train(synthesizer, model, criterion, optimizer, args, dataLoader = None):
                                      train_acc1=train_acc1,
                                      train_acc5=train_acc5, train_loss=train_loss, lr=optimizer.param_groups[0]['lr']))
             loss_metric.reset(), acc_metric.reset()
+
+
+
 
 
 def save_checkpoint(state, is_best, filename='checkpoint.pth'):
