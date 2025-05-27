@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix
 import numpy as np
 
 
-def confusion_matrix(model, dataset_root, output_path="./CM.png", batch_size=512, num_workers=4):
+def compute_confusion_matrix(model, dataset_root, output_path="./CM.png", batch_size=512, num_workers=4):
     '''
     Returns: grafico matplotlib della matrice di confusione tra le predizioni del modello e le etichette reali del dataset.
 	'''

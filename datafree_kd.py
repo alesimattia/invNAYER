@@ -19,7 +19,7 @@ from datafree.metrics.generated_img_quality import inception_score_from_folder
 from datafree.metrics.PCA import model_PCA
 from datafree.metrics.TSNE import compute_TSNE
 from datafree.metrics.model_comparator import Comparator
-from datafree.metrics.confusionMatrix import confusion_matrix
+from datafree.metrics.confusionMatrix import compute_confusion_matrix
 
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
@@ -302,15 +302,15 @@ def main():
             
 
         if "confusionMatrix" in args.metrics:
-            confusion_matrix(teacher, dataset_location, batch_size=args.batch_size, 
-                            output_path=f'./Confusion_IMG/{teacher}confusion_matrix.png')
-            confusion_matrix(nayerStudent, dataset_location, batch_size=args.batch_size,
-                            output_path=f'./Confusion_IMG/{nayerStudent}confusion_matrix.png')
-            confusion_matrix(scratchStudent, dataset_location, batch_size=args.batch_size,
-                            output_path=f'./Confusion_IMG/{scratchStudent}confusion_matrix.png')
-            confusion_matrix(KDstudent, dataset_location, batch_size=args.batch_size,
-                            output_path=f'./Confusion_IMG/{KDstudent}confusion_matrix.png')
-            
+            compute_confusion_matrix(teacher, dataset_location, batch_size=args.batch_size, 
+                            output_path=f'./Confusion_IMG/{args.teacher}confusion_matrix.png')
+            compute_confusion_matrix(nayerStudent, dataset_location, batch_size=args.batch_size,
+                            output_path='./Confusion_IMG/nayerStudent_confusion_matrix.png')
+            compute_confusion_matrix(scratchStudent, dataset_location, batch_size=args.batch_size,
+                            output_path='./Confusion_IMG/scratchStudent_confusion_matrix.png')
+            compute_confusion_matrix(KDstudent, dataset_location, batch_size=args.batch_size,
+                            output_path='./Confusion_IMG/KDstudent_confusion_matrix.png')
+
             wandb.log({
                 "Confusion Matrix - Teacher": wandb.Image(f'./Confusion_IMG/{teacher}_confusion.png'),
                 "Confusion Matrix - NAYER Student ": wandb.Image(f'./Confusion_IMG/{nayerStudent}_confusion.png'),
