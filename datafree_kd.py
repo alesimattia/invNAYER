@@ -634,7 +634,7 @@ def main_worker(gpu, ngpus_per_node, args):
             ''' Modificato con dataLoader al posto del modulo synthesizer '''
             if args.train_distilled_student:
                 train_distilled_student(dataLoader, teacher, nayerStudent, distilledStudent, optimizer, args)
-                else:
+            else:
                 #NAYER default function
                 train(synthesizer, [student, teacher], criterion, optimizer, args)  # kd_steps
         tm = time.time() - tm
