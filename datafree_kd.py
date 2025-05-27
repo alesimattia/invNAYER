@@ -610,7 +610,7 @@ def main_worker(gpu, ngpus_per_node, args):
         tm = time.time()
         args.current_epoch = epoch
 
-        ''' SKIP per KD STUDENT'''   
+        ''' SKIP durante addestramento KD STUDENT'''   
         if not args.train_distilled_student:
             vis_results, cost, loss_synthesizer, loss_oh, loss_var_l1, loss_var_l2, loss_l2, loss_bn, loss_adv = synthesizer.synthesize()  # g_steps
         # if vis_results is not None:
@@ -623,7 +623,7 @@ def main_worker(gpu, ngpus_per_node, args):
         #         for save_iter in range(len(vis_image)):
         #             datafree.utils.save_image_batch(vis_image[save_iter], 'checkpoints/datafree-%s/%s%s%s-%s.png'
         #                                             % (args.method, vis_name, args.log_tag, str_epoch, save_iter))
-        time_cost += cost
+            time_cost += cost #SKIP durante addestramento KD STUDENT
         if epoch >= args.warmup:
             del vis_results
             # del vis_image

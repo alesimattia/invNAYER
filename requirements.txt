@@ -4,6 +4,7 @@ matplotlib
 numpy
 scikit-learn
 scikit-image
+scipy
 sklearn
 einops
 termcolor
