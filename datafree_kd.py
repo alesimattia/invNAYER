@@ -229,19 +229,20 @@ def main():
         scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
 
         if "PCA" in args.metrics:
-            teacher_img = model_PCA(teacher, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
+            components = 2
+            teacher_img = model_PCA(teacher, components=components, batch_size=args.batch_size, num_workers=args.workers, 
                     dataset_root=dataset_location,
                     output_path=f"./PCA_img/teacher_PCA.png")
-            
-            nayerStudent_img = model_PCA(nayerStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
+
+            nayerStudent_img = model_PCA(nayerStudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location,
                     output_path=f"./PCA_img/{args.nayer_student}_PCA.png")
-            
-            scratchStudent_img = model_PCA(scratchStudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers,
+
+            scratchStudent_img = model_PCA(scratchStudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location,
                     output_path=f"./PCA_img/scratchStudent_PCA.png")
-            
-            kdStudent_img = model_PCA(KDstudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
+
+            kdStudent_img = model_PCA(KDstudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location,
                     output_path=f"./PCA_img/{args.KD_student}_PCA.png")
             
