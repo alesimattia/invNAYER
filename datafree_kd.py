@@ -457,9 +457,9 @@ def main_worker(gpu, ngpus_per_node, args):
     student = registry.get_model(args.student, num_classes=num_classes)
     teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
 
-    if(args.train_distilled_student):
+    if args.train_distilled_student:
         nayerStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
-        nayerStudent.load_state_dict(torch.load(args.nayer_student_ckpt, map_location='cpu')['state_dict'])
+        nayerStudent.load_state_dict(torch.load(args.nayer_student, map_location='cpu')['state_dict'])
         nayerStudent = prepare_model(nayerStudent)
 
 
@@ -473,7 +473,11 @@ def main_worker(gpu, ngpus_per_node, args):
     student = prepare_model(student)
     teacher = prepare_model(teacher)
 
-    if "PCA" in args.metrics:
+    '''
+        Salta la sintetizzazione di immagini nel caso in cui 
+        si vogliano calcolare solo le metriche
+    '''
+    if args.metrics: 
         return teacher, student, None, None
     
     criterion = datafree.criterions.KLDiv(T=args.T)
