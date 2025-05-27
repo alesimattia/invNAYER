@@ -213,14 +213,14 @@ def main():
         #Caricamento modelli pre-addestrati
         teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
         teacher.load_state_dict(torch.load(f'./checkpoints/pretrained/{args.dataset}_{args.teacher}.pth', map_location='cpu')['state_dict'])
-        
-        nayerStudent = registry.get_model(args.nayer_student, num_classes=num_classes, pretrained=True).eval() #best_c10r34r18-tvL2-0.0005__l2-0.00001
+                    # Stessa architettura di args.student => resnet18
+        nayerStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval() #best_c10r34r18-tvL2-0.0005__l2-0.00001
         nayerStudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.nayer_student}.pth', map_location='cpu')['state_dict']) 
-        
-        scratchStudent = registry.get_model(args.scratch_student, num_classes=num_classes, pretrained=True).eval() #epoche di esecuzione != epoche train studente scratch 
+                    # Stessa architettura di args.student => resnet18
+        scratchStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval() #epoche di esecuzione != epoche train studente scratch 
         scratchStudent.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth', map_location='cpu')['state_dict'])
-        
-        KDstudent = registry.get_model(args.KDstudent, num_classes=num_classes, pretrained=True).eval()
+                    # Stessa architettura di args.student => resnet18
+        KDstudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
         KDstudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.KDstudent}.pth', map_location='cpu')['state_dict'])
 
 
