@@ -28,9 +28,9 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
         Da documentazione Pytorch:
         train=False If True, creates dataset from training set, otherwise creates from test set.
     '''
-    cifar_test = datasets.CIFAR10(root=dataset_root, train=False, transform=transform)
-    test_loader = torch.utils.data.DataLoader(cifar_test, batch_size=batch_size, shuffle=False, num_workers=num_workers)
-
+    dataset = datasets.CIFAR10(root=dataset_root, train=False, transform=transform)
+    test_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    
     # Estrazione delle caratteristiche
     features = []
     labels = []
@@ -44,13 +44,13 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
     features = np.concatenate(features, axis=0)
     labels = np.concatenate(labels, axis=0)
 
-
     pca = PCA(n_components=components)
     features_pca = pca.fit_transform(features)
+    colors = plt.cm.get_cmap("tab10", len(dataset.classes))
 
     if components == 2:
         fig, ax = plt.subplots(figsize=(10, 8))
-        for class_idx in range(10):
+        for class_idx in range(len(dataset.classes)):
             class_points = features_pca[labels == class_idx]
             ax.scatter(class_points[:, 0], class_points[:, 1], label=f'Class {class_idx}', alpha=0.7, s=20, c=[colors(class_idx)])
         ax.set_xlabel("PCA1")
@@ -58,7 +58,7 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
     else:
         fig = plt.figure(figsize=(10, 8))
         ax = fig.add_subplot(111, projection='3d')
-        for class_idx in range(10):
+        for class_idx in range(len(dataset.classes)):
             class_points = features_pca[labels == class_idx]
             ax.scatter(class_points[:, 0], class_points[:, 1], class_points[:, 2], label=f'Class {class_idx}', alpha=0.7, s=20, c=[colors(class_idx)])
         ax.set_xlabel("PCA1")
@@ -68,7 +68,7 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
     ax.legend()
 
     plt.savefig(output_path)
-    print(f"PCA 3Dplot salvato in: {output_path}")
+    print(f"PCA {n_components}Dplot salvato in: {output_path}")
     plt.close(fig)
 
     return fig
