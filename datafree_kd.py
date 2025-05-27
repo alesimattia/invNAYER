@@ -264,7 +264,7 @@ def main():
             args.logger.info(f"Pred Dist NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")
             args.logger.info(f"Pred Dist KD student-NAYER Student (per class): {kdStudent_nayerStudent_dst}")
             args.logger.info(f"Pred Dist KD student-Scratch Student (per class): {kdStudent_scratchStudent_dst}")
-            args.logger.info("TEST histogram array: "+str([teacher_student_dst[k] for k in teacher_student_dst])) )
+            
             wandb.log({
                 "Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram([teacher_student_dst[k] for k in sorted(teacher_student_dst)]),
                 "Prediction Distance NAYER Student-Scratch Student (per class)": wandb.Histogram([scratchStudent_nayerStudent_dst[k] for k in sorted(scratchStudent_nayerStudent_dst)]),
