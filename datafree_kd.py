@@ -303,7 +303,7 @@ def main():
 
         if "confusionMatrix" in args.metrics:
             compute_confusion_matrix(teacher, dataset_location, batch_size=args.batch_size, 
-                            output_path=f'./Confusion_IMG/{args.teacher}confusion_matrix.png')
+                            output_path='./Confusion_IMG/teacher_confusion_matrix.png')
             compute_confusion_matrix(nayerStudent, dataset_location, batch_size=args.batch_size,
                             output_path='./Confusion_IMG/nayerStudent_confusion_matrix.png')
             compute_confusion_matrix(scratchStudent, dataset_location, batch_size=args.batch_size,
