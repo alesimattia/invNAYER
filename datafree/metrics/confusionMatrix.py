@@ -62,7 +62,6 @@ def compute_confusion_matrix(model, dataset_root, output_path="./CM.png", batch_
             ax.text(j, i, format(cm[i, j], 'd'),
                     ha="center", va="center",
                     color="white" if cm[i, j] > thresh else "black")
-    fig.tight_layout()
     fig.savefig(output_path)
     
     return fig

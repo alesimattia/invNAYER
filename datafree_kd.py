@@ -259,7 +259,12 @@ def main():
             scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance()
             kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance()
             kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance()
-            
+
+            args.logger.info(f"Prediction Distance Teacher‑NAYER Student (per class): {teacher_student_dst}")
+            args.logger.info(f"Prediction Distance NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")
+            args.logger.info(f"Prediction Distance KD student-NAYER Student (per class): {kdStudent_nayerStudent_dst}")
+            args.logger.info(f"Prediction Distance KD student-Scratch Student (per class): {kdStudent_scratchStudent_dst}")
+            args.logger.info("TEST histogram array: "+str([teacher_student_dst[k] for k in sorted(teacher_student_dst.keys())]) )
             wandb.log({
                 "Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram([teacher_student_dst[k] for k in sorted(teacher_student_dst.keys())]),
                 "Prediction Distance NAYER Student-Scratch Student (per class)": wandb.Histogram([scratchStudent_nayerStudent_dst[k] for k in sorted(scratchStudent_nayerStudent_dst.keys())]),
