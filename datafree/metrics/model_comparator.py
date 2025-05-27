@@ -64,7 +64,7 @@ class Comparator:
         if png:
             import matplotlib.pyplot as plt
             import os
-            os.makedirs(save_path, exist_ok=True)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
             class_labels = list(mean_distances.keys())
             distances = [mean_distances[k] for k in class_labels]
             plt.figure(figsize=(8, 5))
