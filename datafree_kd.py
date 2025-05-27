@@ -1,5 +1,6 @@
 import os, glob, random, shutil, warnings, subprocess, registry, datafree, argparse, pickle, time
 from math import gamma
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -264,12 +265,12 @@ def main():
             args.logger.info(f"Pred Dist NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")
             args.logger.info(f"Pred Dist KD student-NAYER Student (per class): {kdStudent_nayerStudent_dst}")
             args.logger.info(f"Pred Dist KD student-Scratch Student (per class): {kdStudent_scratchStudent_dst}")
-            
+
             wandb.log({
-                "Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram([teacher_student_dst[k] for k in sorted(teacher_student_dst)]),
-                "Prediction Distance NAYER Student-Scratch Student (per class)": wandb.Histogram([scratchStudent_nayerStudent_dst[k] for k in sorted(scratchStudent_nayerStudent_dst)]),
-                "Prediction Distance KD student-NAYER Student (per class)": wandb.Histogram([kdStudent_nayerStudent_dst[k] for k in sorted(kdStudent_nayerStudent_dst)]),
-                "Prediction Distance KD student-Scratch Student (per class)": wandb.Histogram([kdStudent_scratchStudent_dst[k] for k in sorted(kdStudent_scratchStudent_dst)])
+                "Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(teacher_student_dst.values()), bins=len(teacher_student_dst))),
+                "Prediction Distance NAYER Student-Scratch Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(scratchStudent_nayerStudent_dst.values()), bins=len(scratchStudent_nayerStudent_dst))),
+                "Prediction Distance KD student-NAYER Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(kdStudent_nayerStudent_dst.values()), bins=len(kdStudent_nayerStudent_dst))),
+                "Prediction Distance KD student-Scratch Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(kdStudent_scratchStudent_dst.values()), bins=len(kdStudent_scratchStudent_dst)))
             })
 
 
@@ -300,9 +301,9 @@ def main():
             scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient()
             
             wandb.log({
-                "Teacher‑NayerStudent DICE score (per class)": wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE.keys())]),
-                "KDstudent-NayerStudent DICE score (per class)": wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE.keys())]),
-                "ScratchStudent-NayerStudent DICE score (per class)": wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE.keys())])
+                "Teacher‑NayerStudent DICE score (per class)": wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]),
+                "KDstudent-NayerStudent DICE score (per class)": wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE)]),
+                "ScratchStudent-NayerStudent DICE score (per class)": wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE)])
             })
             
 
