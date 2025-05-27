@@ -625,7 +625,7 @@ def main_worker(gpu, ngpus_per_node, args):
         #                                             % (args.method, vis_name, args.log_tag, str_epoch, save_iter))
             time_cost += cost #SKIP durante addestramento KD STUDENT
         ''' Adattamento per riutilizzabilità codice NAYER esistente ''' 
-        loss_synthesizer, cost, loss_oh, loss_var_l1, loss_var_l2, loss_l2, loss_bn, loss_adv = 0, 0, 0, 0, 0, 0, 0, 0
+        vis_results, cost, loss_synthesizer, loss_oh, loss_var_l1, loss_var_l2, loss_l2, loss_bn, loss_adv = 0, 0, 0, 0, 0, 0, 0, 0, 0
             
         if epoch >= args.warmup:
             del vis_results
