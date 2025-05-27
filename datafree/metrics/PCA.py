@@ -48,18 +48,23 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
     pca = PCA(n_components=components)
     features_pca = pca.fit_transform(features)
 
-    fig = plt.figure(figsize=(10, 8))
-    ax = fig.add_subplot(111, projection='3d')
-    colors = plt.cm.get_cmap("tab10", 10)
+    if components == 2:
+        fig, ax = plt.subplots(figsize=(10, 8))
+        for class_idx in range(10):
+            class_points = features_pca[labels == class_idx]
+            ax.scatter(class_points[:, 0], class_points[:, 1], label=f'Class {class_idx}', alpha=0.7, s=20, c=[colors(class_idx)])
+        ax.set_xlabel("PCA1")
+        ax.set_ylabel("PCA2")
+    else:
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        for class_idx in range(10):
+            class_points = features_pca[labels == class_idx]
+            ax.scatter(class_points[:, 0], class_points[:, 1], class_points[:, 2], label=f'Class {class_idx}', alpha=0.7, s=20, c=[colors(class_idx)])
+        ax.set_xlabel("PCA1")
+        ax.set_ylabel("PCA2")
+        ax.set_zlabel("PCA3")
 
-    for class_idx in range(10):
-        class_points = features_pca[labels == class_idx]
-        ax.scatter(class_points[:, 0], class_points[:, 1], class_points[:, 2], label=f'Class {class_idx}', alpha=0.7, s=20, c=[colors(class_idx)])
-
-    ax.set_title(f"PCA delle 3 caratteristiche principali di {model}")
-    ax.set_xlabel("PCA1")
-    ax.set_ylabel("PCA2")
-    ax.set_zlabel("PCA3")
     ax.legend()
 
     plt.savefig(output_path)
