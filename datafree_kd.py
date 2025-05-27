@@ -221,7 +221,7 @@ def main():
         scratchStudent.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth', map_location='cpu')['state_dict'])
                     # Stessa architettura di args.student => resnet18
         KDstudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
-        KDstudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.KDstudent}.pth', map_location='cpu')['state_dict'])
+        KDstudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.KD_student}.pth', map_location='cpu')['state_dict'])
 
 
         teacher_nayerStud_Comparator = Comparator(teacher, nayerStudent, dataset_location, args.batch_size, args.workers)
@@ -243,7 +243,7 @@ def main():
             
             kdStudent_img = model_PCA(KDstudent, components=args.PCA, batch_size=args.batch_size, num_workers=args.workers, 
                     dataset_root=dataset_location,
-                    output_path=f"./PCA_img/{args.KDstudent}_PCA.png")
+                    output_path=f"./PCA_img/{args.KD_student}_PCA.png")
             
             wandb.log({
                 "PCA - Teacher": wandb.Image(teacher_img),
