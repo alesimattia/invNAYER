@@ -37,11 +37,11 @@ parser.add_argument('--metrics', nargs='+', help='Lista delle metriche da calcol
                     default=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex"],
                     choices=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex"])
 # Modelli preaddestrati
-parser.add_argument('--nayer_student', type=str, default="./checkpoints/datafree-nayer/cifar10-resnet34-resnet18--best_c10r34r18-tvL2-0.0005__l2-0.00001.pth", 
-                    help='Path modello .pth preaddestrato con NAYER classico; per fare poi train di KDstudent')
-parser.add_argument('--scratch_student', type=str, default='./checkpoints/scratch/cifar10_resnet18_100ep.pth', 
+parser.add_argument('--nayer_student', type=str, default="best_c10r34r18-tvL2-0.0005__l2-0.00001", 
+                    help='Path modello .pth preaddestrato con NAYER classico; per fare poi train di KD_student')
+parser.add_argument('--scratch_student', type=str, default='cifar10_resnet18_100ep', 
                     help='Path modello .pth addestrato con train_scratch.py')
-parser.add_argument('--KD_student', type=str, default='./checkpoints/datafree-nayer/cifar10-resnet34-resnet18--KD_student_best_c10r34r18-tvL2-0.0005__l2-0.00001.pth',
+parser.add_argument('--KD_student', type=str, default='KD_student_best_c10r34r18-tvL2-0.0005__l2-0.00001',
                     help='Path modello .pth che combini predizioni insegnante e migliore modello NAYER')
 parser.add_argument('--train_distilled_student', default=False, action=argparse.BooleanOptionalAction, help='Addestra uno studente distillato con BCE+KL; richiede --nayer_student')
 parser.add_argument('--alpha', default=0.2, type=float, help='Bilanciamento tra BCE loss (teacher) e KL loss (nayer student) per KD_student; richiede --train_distilled_student')
