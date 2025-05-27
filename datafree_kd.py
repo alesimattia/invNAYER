@@ -256,21 +256,22 @@ def main():
         scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
 
         if "distance" in args.metrics: 
-            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance()
-            scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance()
-            kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance()
-            kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance()
+            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/teacher_student_distance.png")
+            scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/scratchStudent_nayerStudent_distance.png")
+            kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_nayerStudent_distance.png")
+            kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_scratchStudent_distance.png")
 
             args.logger.info(f"Pred Dist Teacher‑NAYER Student (per class): {teacher_student_dst}")
             args.logger.info(f"Pred Dist NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")
             args.logger.info(f"Pred Dist KD student-NAYER Student (per class): {kdStudent_nayerStudent_dst}")
             args.logger.info(f"Pred Dist KD student-Scratch Student (per class): {kdStudent_scratchStudent_dst}")
 
+            #wandb.log({"Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(teacher_student_dst.values()), bins=len(teacher_student_dst)))})
             wandb.log({
-                "Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(teacher_student_dst.values()), bins=len(teacher_student_dst))),
-                "Prediction Distance NAYER Student-Scratch Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(scratchStudent_nayerStudent_dst.values()), bins=len(scratchStudent_nayerStudent_dst))),
-                "Prediction Distance KD student-NAYER Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(kdStudent_nayerStudent_dst.values()), bins=len(kdStudent_nayerStudent_dst))),
-                "Prediction Distance KD student-Scratch Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(kdStudent_scratchStudent_dst.values()), bins=len(kdStudent_scratchStudent_dst)))
+                "Prediction Distance Teacher‑NAYER Student (per class)": wandb.Image("./distance_IMG/teacher_student_distance.png"),
+                "Prediction Distance NAYER Student-Scratch Student (per class)": wandb.Image("./distance_IMG/scratchStudent_nayerStudent_distance.png"),
+                "Prediction Distance KD student-NAYER Student (per class)": wandb.Image("./distance_IMG/kdStudent_nayerStudent_distance.png"),
+                "Prediction Distance KD student-Scratch Student (per class)": wandb.Image("./distance_IMG/kdStudent_scratchStudent_distance.png")
             })
 
 
