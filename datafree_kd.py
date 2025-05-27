@@ -224,10 +224,6 @@ def main():
         KDstudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.KD_student}.pth', map_location='cpu')['state_dict'])
 
 
-        teacher_nayerStud_Comparator = Comparator(teacher, nayerStudent, dataset_location, args.batch_size, args.workers)
-        kdStud_nayerStud_Comparator = Comparator(KDstudent, nayerStudent, dataset_location, args.batch_size, args.workers)
-        scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
-
         if "PCA" in args.metrics:
             components = 2
             teacher_img = model_PCA(teacher, components=components, batch_size=args.batch_size, num_workers=args.workers, 
@@ -254,19 +250,16 @@ def main():
             })
 
 
+        teacher_nayerStud_Comparator = Comparator(teacher, nayerStudent, dataset_location, args.batch_size, args.workers)
+        kdStud_nayerStud_Comparator = Comparator(KDstudent, nayerStudent, dataset_location, args.batch_size, args.workers)
+        scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
+
         if "distance" in args.metrics: 
-            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(teacher, nayerStudent,
-                                    dataset_root=dataset_location,
-                                    batch_size=args.batch_size, num_workers=args.workers)
-            scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(scratchStudent, nayerStudent,
-                                    dataset_root=dataset_location,
-                                    batch_size=args.batch_size, num_workers=args.workers)
-            kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(KDstudent, nayerStudent,
-                                    dataset_root=dataset_location,
-                                    batch_size=args.batch_size, num_workers=args.workers)
-            kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance(KDstudent, scratchStudent,
-                                    dataset_root=dataset_location,
-                                    batch_size=args.batch_size, num_workers=args.workers)
+            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance()
+            scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance()
+            kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance()
+            kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance()
+            
             wandb.log({
                 "Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram([teacher_student_dst[k] for k in sorted(teacher_student_dst.keys())]),
                 "Prediction Distance NAYER Student-Scratch Student (per class)": wandb.Histogram([scratchStudent_nayerStudent_dst[k] for k in sorted(scratchStudent_nayerStudent_dst.keys())]),
@@ -297,9 +290,9 @@ def main():
 
 
         if "DICE" in args.metrics:
-            teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient(teacher, nayerStudent, dataset_root=dataset_location)
-            kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient(KDstudent, nayerStudent, dataset_root=dataset_location)
-            scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient(scratchStudent, nayerStudent, dataset_root=dataset_location)
+            teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient()
+            kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient()
+            scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient()
             
             wandb.log({
                 "Teacher‑NayerStudent DICE score (per class)": wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE.keys())]),
@@ -317,6 +310,7 @@ def main():
                             output_path=f'./Confusion_IMG/{scratchStudent}confusion_matrix.png')
             confusion_matrix(KDstudent, dataset_location, batch_size=args.batch_size,
                             output_path=f'./Confusion_IMG/{KDstudent}confusion_matrix.png')
+            
             wandb.log({
                 "Confusion Matrix - Teacher": wandb.Image(f'./Confusion_IMG/{teacher}_confusion.png'),
                 "Confusion Matrix - NAYER Student ": wandb.Image(f'./Confusion_IMG/{nayerStudent}_confusion.png'),
@@ -326,12 +320,9 @@ def main():
         
 
         if "JSindex" in args.metrics:
-            teacher_nayerStud_JS = teacher_nayerStud_Comparator.jensen_Shannon_index(teacher, nayerStudent, dataset_root=dataset_location,
-                                                            batch_size=args.batch_size, num_workers=args.workers)
-            kdStud_nayerStud_JS = kdStud_nayerStud_Comparator.jensen_Shannon_index(KDstudent, nayerStudent, dataset_root=dataset_location,
-                                                            batch_size=args.batch_size, num_workers=args.workers)
-            scratchStud_nayerStud_JS = scratchStud_nayerStud_Comparator.jensen_Shannon_index(scratchStudent, nayerStudent, dataset_root=dataset_location,
-                                                            batch_size=args.batch_size, num_workers=args.workers)
+            teacher_nayerStud_JS = teacher_nayerStud_Comparator.jensen_Shannon_index()
+            kdStud_nayerStud_JS = kdStud_nayerStud_Comparator.jensen_Shannon_index()
+            scratchStud_nayerStud_JS = scratchStud_nayerStud_Comparator.jensen_Shannon_index()
             
             wandb.log({
                 "Jensen-Shannon Index - Teacher/Nayer Student": teacher_nayerStud_JS,
