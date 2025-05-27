@@ -312,10 +312,10 @@ def main():
                             output_path='./Confusion_IMG/KDstudent_confusion_matrix.png')
 
             wandb.log({
-                "Confusion Matrix - Teacher": wandb.Image(f'./Confusion_IMG/{teacher}_confusion.png'),
-                "Confusion Matrix - NAYER Student ": wandb.Image(f'./Confusion_IMG/{nayerStudent}_confusion.png'),
-                "Confusion Matrix - Scratch Student": wandb.Image(f'./Confusion_IMG/{scratchStudent}_confusion.png'),
-                "Confusion Matrix - KD Student": wandb.Image(f'./Confusion_IMG/{KDstudent}_confusion.png')
+                "Confusion Matrix - Teacher": wandb.Image('./Confusion_IMG/teacher_confusion_matrix.png'),
+                "Confusion Matrix - NAYER Student ": wandb.Image('./Confusion_IMG/nayerStudent_confusion_matrix.png'),
+                "Confusion Matrix - Scratch Student": wandb.Image('./Confusion_IMG/scratchStudent_confusion_matrix.png'),
+                "Confusion Matrix - KD Student": wandb.Image('./Confusion_IMG/KDstudent_confusion_matrix.png')
             })
         
 
