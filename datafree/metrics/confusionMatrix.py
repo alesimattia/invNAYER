@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
+import torch 
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from sklearn.metrics import confusion_matrix
 import numpy as np
+
 
 def confusion_matrix(model, dataset_root, output_path="./CM.png", batch_size=512, num_workers=4):
     '''
