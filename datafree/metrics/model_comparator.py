@@ -73,8 +73,7 @@ class Comparator:
             plt.ylabel("Distanza media")
             plt.title(f"Distanza media tra le predizioni del modello {self.model1} e {self.model2} per ogni classe")
             plt.xticks(class_labels)
-            plt.tight_layout()
-            plt.savefig(os.path.join(save_path, "prediction_distance_hist.png"))
+            plt.savefig(save_path)
             plt.close()
 
         return mean_distances
