@@ -29,7 +29,7 @@ class Comparator:
         
 
 
-    def prediction_distance(self, png=False, save_path="./distance_IMG/dst.png"):
+    def prediction_distance(self, png=False, save_path="./distance_IMG/dist.png"):
         '''
         Calcola la NORMA MATRICIALE (Frobenius) tra le predizioni di due modelli, per ogni classe.
         - Rallenta l'esecuzione

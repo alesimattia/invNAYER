@@ -268,10 +268,10 @@ def main():
 
             #wandb.log({"Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(teacher_student_dst.values()), bins=len(teacher_student_dst)))})
             wandb.log({
-                "Prediction Distance Teacher‑NAYER Student (per class)": wandb.Image("./distance_IMG/teacher_student_distance.png"),
-                "Prediction Distance NAYER Student-Scratch Student (per class)": wandb.Image("./distance_IMG/scratchStudent_nayerStudent_distance.png"),
-                "Prediction Distance KD student-NAYER Student (per class)": wandb.Image("./distance_IMG/kdStudent_nayerStudent_distance.png"),
-                "Prediction Distance KD student-Scratch Student (per class)": wandb.Image("./distance_IMG/kdStudent_scratchStudent_distance.png")
+                'Prediction Distance Teacher‑NAYER Student (per class)': wandb.Image('./distance_IMG/teacher_student_distance.png'),
+                'Prediction Distance NAYER Student-Scratch Student (per class)': wandb.Image('./distance_IMG/scratchStudent_nayerStudent_distance.png'),
+                'Prediction Distance KD student-NAYER Student (per class)': wandb.Image('./distance_IMG/kdStudent_nayerStudent_distance.png'),
+                'Prediction Distance KD student-Scratch Student (per class)': wandb.Image('./distance_IMG/kdStudent_scratchStudent_distance.png')
             })
 
 
@@ -302,9 +302,9 @@ def main():
             scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient()
             
             wandb.log({
-                "Teacher‑NayerStudent DICE score (per class)": wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]),
-                "KDstudent-NayerStudent DICE score (per class)": wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE)]),
-                "ScratchStudent-NayerStudent DICE score (per class)": wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE)])
+                'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]),
+                'KDstudent-NayerStudent DICE score (per class)': wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE)]),
+                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE)])
             })
             
 
@@ -319,10 +319,10 @@ def main():
                             output_path='./Confusion_IMG/KDstudent_confusion_matrix.png')
 
             wandb.log({
-                "Confusion Matrix - Teacher": wandb.Image('./Confusion_IMG/teacher_confusion_matrix.png'),
-                "Confusion Matrix - NAYER Student ": wandb.Image('./Confusion_IMG/nayerStudent_confusion_matrix.png'),
-                "Confusion Matrix - Scratch Student": wandb.Image('./Confusion_IMG/scratchStudent_confusion_matrix.png'),
-                "Confusion Matrix - KD Student": wandb.Image('./Confusion_IMG/KDstudent_confusion_matrix.png')
+                'Confusion Matrix - Teacher': wandb.Image('./Confusion_IMG/teacher_confusion_matrix.png'),
+                'Confusion Matrix - NAYER Student ': wandb.Image('./Confusion_IMG/nayerStudent_confusion_matrix.png'),
+                'Confusion Matrix - Scratch Student': wandb.Image('./Confusion_IMG/scratchStudent_confusion_matrix.png'),
+                'Confusion Matrix - KD Student': wandb.Image('./Confusion_IMG/KDstudent_confusion_matrix.png')
             })
         
 
@@ -332,9 +332,9 @@ def main():
             scratchStud_nayerStud_JS = scratchStud_nayerStud_Comparator.jensen_Shannon_index()
             
             wandb.log({
-                "Jensen-Shannon Index - Teacher/Nayer Student": teacher_nayerStud_JS,
-                "Jensen-Shannon Index - KDstudent/Nayer Student": kdStud_nayerStud_JS,
-                "Jensen-Shannon Index - ScratchStudent/Nayer Student": scratchStud_nayerStud_JS
+                'Jensen-Shannon Index - Teacher/Nayer Student': teacher_nayerStud_JS,
+                'Jensen-Shannon Index - KDstudent/Nayer Student': kdStud_nayerStud_JS,
+                'Jensen-Shannon Index - ScratchStudent/Nayer Student': scratchStud_nayerStud_JS
             })
             
         # Sincronizza automaticamente i risultati su wandb    
