@@ -2,7 +2,7 @@ import torch
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import numpy as np
-from scipy.spatial.distance import jensenshannon
+
 
 #from sklearn.metrics import pairwise_distances
 
@@ -23,9 +23,9 @@ class Comparator:
             Normalizza ogni canale dell'immagine RGB usando la media e la deviazione standard calcolate sul dataset CIFAR-10.
             Ciò aiuta i modelli a convergere meglio durante l'addestramento e l'inferenza.
         '''
-        self.cifar_test = datasets.CIFAR10(root=dataset_root, train=False, download=True, transform=self.transform)
-        self.test_loader = torch.utils.data.DataLoader(self.cifar_test, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers)
-        self.num_classes = len(self.cifar_test.classes)
+        self.test_dataset = datasets.CIFAR10(root=dataset_root, train=False, download=True, transform=self.transform)
+        self.test_loader = torch.utils.data.DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers)
+        self.num_classes = len(self.test_dataset.classes)
         
 
 
@@ -122,6 +122,7 @@ class Comparator:
         Calcola l'indice Jensen-Shannon medio tra le predizioni (softmax) di due modelli su un dataset.
         Restituisce il valore medio su tutte le immagini.
         """
+        from scipy.spatial.distance import jensenshannon
         js_distances = []
 
         with torch.no_grad():
@@ -137,3 +138,63 @@ class Comparator:
 
         js_mean = np.mean(js_distances)
         return js_mean
+
+
+    def plot_decision_boundary(self, model, dataset, device=None, batch_size=512, num_workers=4, output_path="decision_boundary.png"):
+        """
+        Calcola e visualizza i decision boundary delle predizioni del modello.
+        - Le feature vengono ridotte a 2D tramite PCA.
+        """
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import ListedColormap
+        #from sklearn.decomposition import PCA
+
+        if device is None:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = model.to(device).eval()
+        loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+
+        features = []
+        labels = []
+        with torch.no_grad():
+            for images, targets in loader:
+                images = images.to(device)
+                # Estrai le feature dallo strato penultimo (ResNet: return_features=True)
+                outputs, feats = model(images, return_features=True)
+                features.append(feats.cpu().numpy())
+                labels.append(targets.numpy())
+        features = np.concatenate(features, axis=0)
+        labels = np.concatenate(labels, axis=0)
+
+        # Riduci a 2D con PCA
+        pca = PCA(n_components=2)
+        features_2d = pca.fit_transform(features)
+
+        # Crea una griglia per il plot dei confini
+        x_min, x_max = features_2d[:, 0].min() - 1, features_2d[:, 0].max() + 1
+        y_min, y_max = features_2d[:, 1].min() - 1, features_2d[:, 1].max() + 1
+        xx, yy = np.meshgrid(np.linspace(x_min, x_max, 300), np.linspace(y_min, y_max, 300))
+        grid = np.c_[xx.ravel(), yy.ravel()]
+
+        # Proietta la griglia nello spazio originale delle feature
+        grid_original = pca.inverse_transform(grid)
+        grid_tensor = torch.tensor(grid_original, dtype=torch.float32).to(device)
+        with torch.no_grad():
+            # Passa le feature direttamente al classificatore lineare
+            logits = model.linear(grid_tensor)
+            preds = torch.argmax(logits, dim=1).cpu().numpy()
+        preds = preds.reshape(xx.shape)
+
+        # Plot
+        plt.figure(figsize=(10, 8))
+        cmap = ListedColormap(plt.cm.tab10.colors[:len(np.unique(labels))])
+        plt.contourf(xx, yy, preds, alpha=0.3, cmap=cmap)
+        scatter = plt.scatter(features_2d[:, 0], features_2d[:, 1], c=labels, cmap=cmap, edgecolor='k', s=20)
+        plt.xlabel("PCA1")
+        plt.ylabel("PCA2")
+        plt.title("Decision Boundary del modello ResNet18")
+        plt.legend(*scatter.legend_elements(), title="Classi")
+        plt.tight_layout()
+        plt.savefig(output_path)
+        plt.close()
+        print(f"Decision boundary salvato in: {output_path}")

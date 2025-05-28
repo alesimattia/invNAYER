@@ -1,3 +1,10 @@
+import torch
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+import numpy as np
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
 def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, num_workers=4, output_path='./PCA_plot.png'):
     """
     Estrae le 3 caratteristiche principali del modello mediante PCA e le 
@@ -5,14 +12,7 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
 
     Memorizza su FS il grafico delle 3 componenti principali
     """
-
-    import torch
-    import torchvision.transforms as transforms
-    import torchvision.datasets as datasets
-    from sklearn.decomposition import PCA
-    import matplotlib.pyplot as plt
     from mpl_toolkits.mplot3d import Axes3D
-    import numpy as np
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
@@ -64,11 +64,49 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
         ax.set_xlabel("PCA1")
         ax.set_ylabel("PCA2")
         ax.set_zlabel("PCA3")
-
     ax.legend()
 
-    plt.savefig(output_path)
-    print(f"PCA {components}Dplot salvato in: {output_path}")
+    if output_path is None:
+        plt.savefig(output_path)
+        print(f"PCA {components}Dplot salvato in: {output_path}")
     plt.close(fig)
+
+    return features_pca, labels, pca, fig
+
+
+def plot_decision_boundary(model, dataset, batch_size=512, num_workers=4, output_path="./PCA_plot/decision_boundary.png"):
+    from matplotlib.colors import ListedColormap
+
+    # Sfrutta la funzione model_PCA()
+    features_pca, labels, _, pca = model_PCA(model, components=2, dataset_root='../CIFAR10',
+                                             batch_size=batch_size, num_workers=num_workers, output_path=None)
+
+    # Crea una griglia per il plot dei confini
+    x_min, x_max = features_pca[:, 0].min() - 1, features_pca[:, 0].max() + 1
+    y_min, y_max = features_pca[:, 1].min() - 1, features_pca[:, 1].max() + 1
+    xx, yy = np.meshgrid(np.linspace(x_min, x_max, 300), np.linspace(y_min, y_max, 300))
+    grid = np.c_[xx.ravel(), yy.ravel()]
+
+    # Proietta la griglia nello spazio originale delle feature usando la PCA fitted
+    grid_original = pca.inverse_transform(grid)
+    grid_tensor = torch.tensor(grid_original, dtype=torch.float32).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+    with torch.no_grad():
+        logits = model.linear(grid_tensor)
+        preds = torch.argmax(logits, dim=1).cpu().numpy()
+    preds = preds.reshape(xx.shape)
+
+    
+    fig, ax = plt.subplots(figsize=(10, 8))
+    cmap = ListedColormap(plt.cm.tab10.colors[:len(np.unique(labels))])
+    ax.contourf(xx, yy, preds, alpha=0.3, cmap=cmap)
+    scatter = ax.scatter(features_pca[:, 0], features_pca[:, 1], c=labels, cmap=cmap, edgecolor='k', s=20)
+    ax.set_xlabel("PCA1")
+    ax.set_ylabel("PCA2")
+    ax.set_title(f"Decision Boundary - {model.__class__.__name__}")
+    ax.legend(*scatter.legend_elements(), title="Classi")
+
+    if output_path is not None:
+        plt.savefig(output_path)
+        print(f"Decision boundary salvato in: {output_path}")
 
     return fig

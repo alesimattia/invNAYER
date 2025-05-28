@@ -18,6 +18,7 @@ import wandb
 
 from datafree.metrics.generated_img_quality import inception_score_from_folder
 from datafree.metrics.PCA import model_PCA
+from datafree.metrics.PCA import plot_decision_boundary
 from datafree.metrics.TSNE import compute_TSNE
 from datafree.metrics.model_comparator import Comparator
 from datafree.metrics.confusionMatrix import compute_confusion_matrix
@@ -35,8 +36,8 @@ parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coe
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
 # Metriche
 parser.add_argument('--metrics', nargs='+', help='Lista delle metriche da calcolare: PCA, TSNE, distance, DICE, confusionMatrix, JSindex', 
-                    default=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex"],
-                    choices=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex"])
+                    default=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"],
+                    choices=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"])
 # Modelli preaddestrati
 parser.add_argument('--nayer_student', type=str, default="best_c10r34r18-tvL2-0.0005__l2-0.00001", 
                     help='Path modello .pth preaddestrato con NAYER classico; per fare poi train di KD_student')
@@ -204,10 +205,9 @@ def main():
 
     #
     #
+    ###### VALUTAZIONE MODELLI #####
     #
-    ### VALUTAZIONE MODELLI
-    #
-    if any(m in args.metrics for m in ["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex"]):
+    if any(m in args.metrics for m in ["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"]):
         num_classes, _, _ = registry.get_dataset(name=args.dataset, data_root=args.data_root)
         dataset_location = os.path.join(os.path.dirname(__file__), '../', args.dataset.upper())
 
@@ -243,35 +243,25 @@ def main():
                     dataset_root=dataset_location,
                     output_path=f"./PCA_img/{args.KD_student}_PCA.png")
             
-            wandb.log({
-                "PCA - Teacher": wandb.Image(teacher_img),
-                "PCA - NAYER Student": wandb.Image(nayerStudent_img),
-                "PCA - Scratch Student": wandb.Image(scratchStudent_img),
-                "PCA - KD Student": wandb.Image(kdStudent_img)
+            wandb.log({                         # [2] è l'immagine
+                "PCA - Teacher": wandb.Image(teacher_img[3]),
+                "PCA - NAYER Student": wandb.Image(nayerStudent_img[3]),
+                "PCA - Scratch Student": wandb.Image(scratchStudent_img[3]),
+                "PCA - KD Student": wandb.Image(kdStudent_img[3])
             })
 
 
-        teacher_nayerStud_Comparator = Comparator(teacher, nayerStudent, dataset_location, args.batch_size, args.workers)
-        kdStud_nayerStud_Comparator = Comparator(KDstudent, nayerStudent, dataset_location, args.batch_size, args.workers)
-        scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
+        if "decisionBoundary" in args.metrics:
+            teacher_boundary = plot_decision_boundary(teacher, dataset_location, output_path="./PCA_img/teacher_decision_boundary.png")
+            nayerStudent_boundary = plot_decision_boundary(nayerStudent, dataset_location, output_path="./PCA_img/nayerStudent_decision_boundary.png")
+            scratchStudent_boundary = plot_decision_boundary(scratchStudent, dataset_location, output_path="./PCA_img/scratchStudent_decision_boundary.png")
+            kdStudent_boundary = plot_decision_boundary(KDstudent, dataset_location, output_path="./PCA_img/kdStudent_decision_boundary.png")
 
-        if "distance" in args.metrics: 
-            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/teacher_student_distance.png")
-            scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/scratchStudent_nayerStudent_distance.png")
-            kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_nayerStudent_distance.png")
-            kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_scratchStudent_distance.png")
-
-            args.logger.info(f"Pred Dist Teacher‑NAYER Student (per class): {teacher_student_dst}")
-            args.logger.info(f"Pred Dist NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")
-            args.logger.info(f"Pred Dist KD student-NAYER Student (per class): {kdStudent_nayerStudent_dst}")
-            args.logger.info(f"Pred Dist KD student-Scratch Student (per class): {kdStudent_scratchStudent_dst}")
-
-            #wandb.log({"Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(teacher_student_dst.values()), bins=len(teacher_student_dst)))})
             wandb.log({
-                'Prediction Distance Teacher‑NAYER Student (per class)': wandb.Image('./distance_IMG/teacher_student_distance.png'),
-                'Prediction Distance NAYER Student-Scratch Student (per class)': wandb.Image('./distance_IMG/scratchStudent_nayerStudent_distance.png'),
-                'Prediction Distance KD student-NAYER Student (per class)': wandb.Image('./distance_IMG/kdStudent_nayerStudent_distance.png'),
-                'Prediction Distance KD student-Scratch Student (per class)': wandb.Image('./distance_IMG/kdStudent_scratchStudent_distance.png')
+                "Decision Boundary - Teacher": wandb.Image(teacher_boundary),
+                "Decision Boundary - NAYER Student": wandb.Image(nayerStudent_boundary),
+                "Decision Boundary - Scratch Student": wandb.Image(scratchStudent_boundary),
+                "Decision Boundary - KD Student": wandb.Image(kdStudent_boundary)
             })
 
 
@@ -296,18 +286,6 @@ def main():
             })
 
 
-        if "DICE" in args.metrics:
-            teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient()
-            kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient()
-            scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient()
-            
-            wandb.log({
-                'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]),
-                'KDstudent-NayerStudent DICE score (per class)': wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE)]),
-                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE)])
-            })
-            
-
         if "confusionMatrix" in args.metrics:
             compute_confusion_matrix(teacher, dataset_location, batch_size=args.batch_size, 
                             output_path='./Confusion_IMG/teacher_confusion_matrix.png')
@@ -323,6 +301,43 @@ def main():
                 'Confusion Matrix - NAYER Student ': wandb.Image('./Confusion_IMG/nayerStudent_confusion_matrix.png'),
                 'Confusion Matrix - Scratch Student': wandb.Image('./Confusion_IMG/scratchStudent_confusion_matrix.png'),
                 'Confusion Matrix - KD Student': wandb.Image('./Confusion_IMG/KDstudent_confusion_matrix.png')
+            })
+
+        #
+        #### Modulo COMPARATOR ########
+        #
+        teacher_nayerStud_Comparator = Comparator(teacher, nayerStudent, dataset_location, args.batch_size, args.workers)
+        kdStud_nayerStud_Comparator = Comparator(KDstudent, nayerStudent, dataset_location, args.batch_size, args.workers)
+        scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
+
+        if "distance" in args.metrics: 
+            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/teacher_student_distance.png")
+            scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/scratchStudent_nayerStudent_distance.png")
+            kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_nayerStudent_distance.png")
+            kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_scratchStudent_distance.png")
+
+            args.logger.info(f"Pred Dist Teacher‑NAYER Student (per class): {teacher_student_dst}")
+            args.logger.info(f"Pred Dist NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")
+            args.logger.info(f"Pred Dist KD student-NAYER Student (per class): {kdStudent_nayerStudent_dst}")
+            args.logger.info(f"Pred Dist KD student-Scratch Student (per class): {kdStudent_scratchStudent_dst}")
+            #wandb.log({"Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(teacher_student_dst.values()), bins=len(teacher_student_dst)))})
+            wandb.log({
+                'Prediction Distance Teacher‑NAYER Student (per class)': wandb.Image('./distance_IMG/teacher_student_distance.png'),
+                'Prediction Distance NAYER Student-Scratch Student (per class)': wandb.Image('./distance_IMG/scratchStudent_nayerStudent_distance.png'),
+                'Prediction Distance KD student-NAYER Student (per class)': wandb.Image('./distance_IMG/kdStudent_nayerStudent_distance.png'),
+                'Prediction Distance KD student-Scratch Student (per class)': wandb.Image('./distance_IMG/kdStudent_scratchStudent_distance.png')
+            })
+
+
+        if "DICE" in args.metrics:
+            teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient()
+            kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient()
+            scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient()
+            
+            wandb.log({
+                'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]),
+                'KDstudent-NayerStudent DICE score (per class)': wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE)]),
+                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE)])
             })
         
 
