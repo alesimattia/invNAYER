@@ -29,7 +29,7 @@ class Comparator:
         
 
 
-    def prediction_distance(self, save_png=False, save_path="./distance_IMG/dist.png"):
+    def prediction_distance(self, save_png=False, save_path="./IMG/distance/dist.png"):
         '''
         Calcola la NORMA MATRICIALE (Frobenius) tra le predizioni di due modelli, per ogni classe.
         - Rallenta l'esecuzione
@@ -81,7 +81,7 @@ class Comparator:
 
 
 
-    def dice_coefficient(self):
+    def dice_coefficient(self, save_path="./IMG/DICE/dice_hist.png"):
         '''
         Calcola il coefficiente di Dice per ogni classe tra le predizioni di due modelli.
             Returns: np.histogram

@@ -1,0 +1,4 @@
+# Ignora tutti i file nella cartella
+IMG/*
+# Ma NON ignorare le sottocartelle
+!IMG/*/

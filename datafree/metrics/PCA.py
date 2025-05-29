@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
-def model_PCA(model, components=3, dataset_root='../CIFAR10', save_as_png=False, batch_size=512, num_workers=4, output_path='./PCA_plot.png'):
+def model_PCA(model, components=3, dataset_root='../CIFAR10', save_as_png=False, batch_size=512, num_workers=4, output_path='./IMG/PCA/PCA_plot.png'):
     """
     Estrae le 3 caratteristiche principali del modello mediante PCA e le 
     visualizza in uno spazio 3D
@@ -76,7 +76,7 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', save_as_png=False,
 
 
 
-def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num_workers=4, output_path="./PCA_plot/decision_boundary.png"):
+def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num_workers=4, output_path="./IMG/PCA/decision_boundary.png"):
     """
         Calcola e visualizza i decision boundary delle predizioni del modello.
         - Le feature vengono ridotte a 2D tramite PCA.

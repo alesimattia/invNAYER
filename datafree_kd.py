@@ -230,15 +230,15 @@ def main():
             start_time = time.time()
             teacher_img = model_PCA(teacher, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers, 
                     dataset_root=dataset_location,
-                    output_path=f"./PCA_img/teacher_PCA.png")
+                    output_path=f"./IMG/PCA/teacher_PCA.png")
 
             nayerStudent_img = model_PCA(nayerStudent, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location,
-                    output_path=f"./PCA_img/{args.nayer_student}_PCA.png")
+                    output_path=f"./IMG/PCA/{args.nayer_student}_PCA.png")
 
             scratchStudent_img = model_PCA(scratchStudent, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location,
-                    output_path=f"./PCA_img/scratchStudent_PCA.png")
+                    output_path=f"./IMG/PCA/scratchStudent_PCA.png")
 
            # kdStudent_img = model_PCA(KDstudent, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers,
             #        dataset_root=dataset_location,
@@ -255,60 +255,60 @@ def main():
 
         if "decisionBoundary" in args.metrics:
             start_time = time.time()
-            plot_decision_boundary(teacher, dataset_location, output_path="./PCA_img/teacher_decision_boundary.png")
-            plot_decision_boundary(nayerStudent, dataset_location, output_path="./PCA_img/nayerStudent_decision_boundary.png")
-            plot_decision_boundary(scratchStudent, dataset_location, output_path="./PCA_img/scratchStudent_decision_boundary.png")
-            #kdStudent_boundary = plot_decision_boundary(KDstudent, dataset_location, output_path="./PCA_img/kdStudent_decision_boundary.png")
+            plot_decision_boundary(teacher, dataset_location, output_path="./IMG/PCA/teacher_decision_boundary.png")
+            plot_decision_boundary(nayerStudent, dataset_location, output_path="./IMG/PCA/nayerStudent_decision_boundary.png")
+            plot_decision_boundary(scratchStudent, dataset_location, output_path="./IMG/PCA/scratchStudent_decision_boundary.png")
+            #kdStudent_boundary = plot_decision_boundary(KDstudent, dataset_location, output_path="./IMG/PCA/kdStudent_decision_boundary.png")
 
             args.logger.info({"Decision Boundary - Elapsed Time": time.time() - start_time})
             wandb.log({
-                "Decision Boundary - Teacher": wandb.Image("./PCA_img/teacher_decision_boundary.png"),
-                "Decision Boundary - NAYER Student": wandb.Image("./PCA_img/nayerStudent_decision_boundary.png"),
-                "Decision Boundary - Scratch Student": wandb.Image("./PCA_img/scratchStudent_decision_boundary.png"),
-                #"Decision Boundary - KD Student": wandb.Image("./PCA_img/kdStudent_decision_boundary.png")
+                "Decision Boundary - Teacher": wandb.Image("./IMG/PCA/teacher_decision_boundary.png"),
+                "Decision Boundary - NAYER Student": wandb.Image("./IMG/PCA/nayerStudent_decision_boundary.png"),
+                "Decision Boundary - Scratch Student": wandb.Image("./IMG/PCA/scratchStudent_decision_boundary.png"),
+                #"Decision Boundary - KD Student": wandb.Image("./IMG/PCA/kdStudent_decision_boundary.png")
             })
 
 
         if "TSNE" in args.metrics:
             start_time = time.time()
             compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
-                                    num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png" )
-            
+                                    num_workers=args.workers, output_path="./IMG/TSNE/teacher_TSNE.png" )
+
             compute_TSNE(nayerStudent, dataset_root=dataset_location, batch_size=args.batch_size,
-                                    num_workers=args.workers, output_path="./TSNE_img/nayerStudent_TSNE.png" )
+                                    num_workers=args.workers, output_path="./IMG/TSNE/nayerStudent_TSNE.png" )
 
             compute_TSNE(scratchStudent, dataset_root=dataset_location, batch_size=args.batch_size,
-                                            num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png" )
-            
+                                            num_workers=args.workers, output_path="./IMG/TSNE/scratch_stud_TSNE.png" )
+
             #kdStudent_img = compute_TSNE(KDstudent, dataset_root=dataset_location, batch_size=args.batch_size,
-            #                        num_workers=args.workers, output_path="./TSNE_img/kdStudent_TSNE.png" )
+            #                        num_workers=args.workers, output_path="./IMG/TSNE/kdStudent_TSNE.png" )
 
             args.logger.info({"TSNE - Elapsed Time": time.time() - start_time})
             wandb.log({
-                "TSNE - Teacher": wandb.Image("./TSNE_img/teacher_TSNE.png"),
-                "TSNE - NAYER Student": wandb.Image("./TSNE_img/nayerStudent_TSNE.png"),
-                "TSNE - Scratch Student": wandb.Image("./TSNE_img/scratch_stud_TSNE.png"),
-                #"TSNE - KD Student": wandb.Image("./TSNE_img/kdStudent_TSNE.png")
+                "TSNE - Teacher": wandb.Image("./IMG/TSNE/teacher_TSNE.png"),
+                "TSNE - NAYER Student": wandb.Image("./IMG/TSNE/nayerStudent_TSNE.png"),
+                "TSNE - Scratch Student": wandb.Image("./IMG/TSNE/scratch_stud_TSNE.png"),
+                #"TSNE - KD Student": wandb.Image("./IMG/TSNE/kdStudent_TSNE.png")
             })
 
 
         if "confusionMatrix" in args.metrics:
             start_time = time.time()
-            compute_confusion_matrix(teacher, dataset_location, batch_size=args.batch_size, 
-                            output_path='./Confusion_IMG/teacher_confusion_matrix.png')
+            compute_confusion_matrix(teacher, dataset_location, batch_size=args.batch_size,
+                            output_path='./IMG/confusion/teacher_confusion_matrix.png')
             compute_confusion_matrix(nayerStudent, dataset_location, batch_size=args.batch_size,
-                            output_path='./Confusion_IMG/nayerStudent_confusion_matrix.png')
+                            output_path='./IMG/confusion/nayerStudent_confusion_matrix.png')
             compute_confusion_matrix(scratchStudent, dataset_location, batch_size=args.batch_size,
-                            output_path='./Confusion_IMG/scratchStudent_confusion_matrix.png')
+                            output_path='./IMG/confusion/scratchStudent_confusion_matrix.png')
             #compute_confusion_matrix(KDstudent, dataset_location, batch_size=args.batch_size,
             #                output_path='./Confusion_IMG/KDstudent_confusion_matrix.png')
 
             args.logger.info({"Confusion Matrix - Elapsed Time": time.time() - start_time})
             wandb.log({
-                'Confusion Matrix - Teacher': wandb.Image('./Confusion_IMG/teacher_confusion_matrix.png'),
-                'Confusion Matrix - NAYER Student ': wandb.Image('./Confusion_IMG/nayerStudent_confusion_matrix.png'),
-                'Confusion Matrix - Scratch Student': wandb.Image('./Confusion_IMG/scratchStudent_confusion_matrix.png'),
-                #'Confusion Matrix - KD Student': wandb.Image('./Confusion_IMG/KDstudent_confusion_matrix.png')
+                'Confusion Matrix - Teacher': wandb.Image('./IMG/confusion/teacher_confusion_matrix.png'),
+                'Confusion Matrix - NAYER Student ': wandb.Image('./IMG/confusion/nayerStudent_confusion_matrix.png'),
+                'Confusion Matrix - Scratch Student': wandb.Image('./IMG/confusion/scratchStudent_confusion_matrix.png'),
+                #'Confusion Matrix - KD Student': wandb.Image('./IMG/confusion/KDstudent_confusion_matrix.png')
             })
 
         #
@@ -320,10 +320,10 @@ def main():
 
         if "distance" in args.metrics: 
             start_time = time.time()
-            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./distance_IMG/teacher_student_distance.png")
-            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./distance_IMG/scratchStudent_nayerStudent_distance.png")
-            #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./distance_IMG/kdStudent_nayerStudent_distance.png")
-            #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./distance_IMG/kdStudent_scratchStudent_distance.png")
+            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./IMG/distance/teacher_student_distance.png")
+            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./IMG/distance/scratchStudent_nayerStudent_distance.png")
+            #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./IMG/distance/kdStudent_nayerStudent_distance.png")
+            #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./IMG/distance/kdStudent_scratchStudent_distance.png")
 
             args.logger.info(f"Pred Dist Teacher‑NAYER Student (per class): {teacher_student_dst}")
             args.logger.info(f"Pred Dist NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")
@@ -333,26 +333,26 @@ def main():
             args.logger.info({"Prediction Distance - Elapsed Time": time.time() - start_time})
             
             wandb.log({
-                'Prediction Distance - Teacher/NAYER Student (per class)': wandb.Image('./distance_IMG/teacher_student_distance.png'),
-                'Prediction Distance - NAYER Student/Scratch Student (per class)': wandb.Image('./distance_IMG/scratchStudent_nayerStudent_distance.png'),
-                #'Prediction Distance - KD student/NAYER Student (per class)': wandb.Image('./distance_IMG/kdStudent_nayerStudent_distance.png'),
-                #'Prediction Distance - KD student/Scratch Student (per class)': wandb.Image('./distance_IMG/kdStudent_scratchStudent_distance.png')
+                'Prediction Distance - Teacher/NAYER Student (per class)': wandb.Image('./IMG/distance/teacher_student_distance.png'),
+                'Prediction Distance - NAYER Student/Scratch Student (per class)': wandb.Image('./IMG/distance/scratchStudent_nayerStudent_distance.png'),
+                #'Prediction Distance - KD student/NAYER Student (per class)': wandb.Image('./IMG/distance/kdStudent_nayerStudent_distance.png'),
+                #'Prediction Distance - KD student/Scratch Student (per class)': wandb.Image('./IMG/distance/kdStudent_scratchStudent_distance.png')
             })
 
 
         if "DICE" in args.metrics:
             start_time = time.time()
-            teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient()
-            #kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient()
-            scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient()
+            teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/teacher_nayerStud_DICE.png")
+            #kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/kdStud_nayerStud_DICE.png")
+            scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/scratchStus_nayerStud_DICE.png")
 
             args.logger.info(f"DICE score - Elapsed Time: {time.time() - start_time}")
             
             wandb.log({
-            #    'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]),
-            'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram(np_histogram=teacher_nayerStud_DICE),
-            #    'KDstudent-NayerStudent DICE score (per class)': wandb.Histogram(np_histogram=kdStud_nayerStud_DICE),
-                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Histogram(np_histogram=scratchStus_nayerStud_DICE)
+            #    'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]), #ISTOGRAMMA NON FUNZIONA
+            'Teacher‑NayerStudent DICE score (per class)': wandb.Image(teacher_nayerStud_DICE),
+            #    'KDstudent-NayerStudent DICE score (per class)': wandb.Image(kdStud_nayerStud_DICE),
+                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Image(scratchStus_nayerStud_DICE)
             })
         
 
