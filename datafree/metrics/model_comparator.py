@@ -84,7 +84,7 @@ class Comparator:
     def dice_coefficient(self):
         '''
         Calcola il coefficiente di Dice per ogni classe tra le predizioni di due modelli.
-            Returns: dizionario {classe: dice_score}
+            Returns: np.histogram
         '''
         preds1, preds2, groundT = [], [], []
 
@@ -115,7 +115,7 @@ class Comparator:
             dice = (2. * intersection) / (len(pred1) + len(pred2) + 1e-8)
             dice_scores[currentClass] = dice
 
-        return np.histogram(list(dice_scores.values()), bins='auto')
+        return np.histogram(list(dice_scores.values()), bins=len(dice_scores.keys()))
 
 
     def jensen_Shannon_index(self):
