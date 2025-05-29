@@ -227,27 +227,27 @@ def main():
 
         if "PCA" in args.metrics:
             components = 2
-            teacher_img = model_PCA(teacher, components=components, batch_size=args.batch_size, num_workers=args.workers, 
+            teacher_img = model_PCA(teacher, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers, 
                     dataset_root=dataset_location,
                     output_path=f"./PCA_img/teacher_PCA.png")
 
-            nayerStudent_img = model_PCA(nayerStudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
+            nayerStudent_img = model_PCA(nayerStudent, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location,
                     output_path=f"./PCA_img/{args.nayer_student}_PCA.png")
 
-            scratchStudent_img = model_PCA(scratchStudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
+            scratchStudent_img = model_PCA(scratchStudent, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location,
                     output_path=f"./PCA_img/scratchStudent_PCA.png")
 
-            kdStudent_img = model_PCA(KDstudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
+            kdStudent_img = model_PCA(KDstudent, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location,
                     output_path=f"./PCA_img/{args.KD_student}_PCA.png")
             
-            wandb.log({                         # [2] è l'immagine
-                "PCA - Teacher": wandb.Image(teacher_img[3]),
-                "PCA - NAYER Student": wandb.Image(nayerStudent_img[3]),
-                "PCA - Scratch Student": wandb.Image(scratchStudent_img[3]),
-                "PCA - KD Student": wandb.Image(kdStudent_img[3])
+            wandb.log({                      
+                "PCA - Teacher": wandb.Image(teacher_img),
+                "PCA - NAYER Student": wandb.Image(nayerStudent_img),
+                "PCA - Scratch Student": wandb.Image(scratchStudent_img),
+                "PCA - KD Student": wandb.Image(kdStudent_img)
             })
 
 
@@ -312,9 +312,9 @@ def main():
 
         if "distance" in args.metrics: 
             teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/teacher_student_distance.png")
-            scratchStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/scratchStudent_nayerStudent_distance.png")
-            kdStudent_nayerStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_nayerStudent_distance.png")
-            kdStudent_scratchStudent_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_scratchStudent_distance.png")
+            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/scratchStudent_nayerStudent_distance.png")
+            kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_nayerStudent_distance.png")
+            kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_scratchStudent_distance.png")
 
             args.logger.info(f"Pred Dist Teacher‑NAYER Student (per class): {teacher_student_dst}")
             args.logger.info(f"Pred Dist NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")

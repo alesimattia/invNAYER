@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
-def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, num_workers=4, output_path='./PCA_plot.png'):
+def model_PCA(model, components=3, dataset_root='../CIFAR10', save_as_png=False, batch_size=512, num_workers=4, output_path='./PCA_plot.png'):
     """
     Estrae le 3 caratteristiche principali del modello mediante PCA e le 
     visualizza in uno spazio 3D
@@ -66,19 +66,20 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', batch_size=512, nu
         ax.set_zlabel("PCA3")
     ax.legend()
 
-    if output_path is None:
-        plt.savefig(output_path)
-        print(f"PCA {components}Dplot salvato in: {output_path}")
-    plt.close(fig)
 
-    return features_pca, labels, pca, fig
+    if save_as_png and output_path is not None:
+        plt.savefig(output_path)
+        print(f"PCA {components}D plot salvato in: {output_path}")
+        plt.close(fig)
+        return fig
+    return features_pca, labels, pca
 
 
 def plot_decision_boundary(model, dataset, batch_size=512, num_workers=4, output_path="./PCA_plot/decision_boundary.png"):
     from matplotlib.colors import ListedColormap
 
     # Sfrutta la funzione model_PCA()
-    features_pca, labels, _, pca = model_PCA(model, components=2, dataset_root='../CIFAR10',
+    features_pca, labels, pca = model_PCA(model, components=2, dataset_root='../CIFAR10', save_as_png=False,
                                              batch_size=batch_size, num_workers=num_workers, output_path=None)
 
     # Crea una griglia per il plot dei confini
