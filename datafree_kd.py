@@ -271,13 +271,13 @@ def main():
 
         if "TSNE" in args.metrics:
             start_time = time.time()
-            teacher_img = compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
+            compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
                                     num_workers=args.workers, output_path="./TSNE_img/teacher_TSNE.png" )
             
-            nayerStudent_img = compute_TSNE(nayerStudent, dataset_root=dataset_location, batch_size=args.batch_size,
-                                    num_workers=args.workers, output_path="./TSNE_img/student_TSNE.png" )
-            
-            scratchStudent_img = compute_TSNE(scratchStudent, dataset_root=dataset_location, batch_size=args.batch_size, 
+            compute_TSNE(nayerStudent, dataset_root=dataset_location, batch_size=args.batch_size,
+                                    num_workers=args.workers, output_path="./TSNE_img/nayerStudent_TSNE.png" )
+
+            compute_TSNE(scratchStudent, dataset_root=dataset_location, batch_size=args.batch_size,
                                             num_workers=args.workers, output_path="./TSNE_img/scratch_stud_TSNE.png" )
             
             #kdStudent_img = compute_TSNE(KDstudent, dataset_root=dataset_location, batch_size=args.batch_size,
@@ -285,10 +285,10 @@ def main():
 
             args.logger.info({"TSNE - Elapsed Time": time.time() - start_time})
             wandb.log({
-                "TSNE - Teacher": wandb.Image(teacher_img),
-                "TSNE - NAYER Student": wandb.Image(nayerStudent_img),
-                "TSNE - Scratch Student": wandb.Image(scratchStudent_img),
-                #"TSNE - KD Student": wandb.Image(kdStudent_img)
+                "TSNE - Teacher": wandb.Image("./TSNE_img/teacher_TSNE.png"),
+                "TSNE - NAYER Student": wandb.Image("./TSNE_img/nayerStudent_TSNE.png"),
+                "TSNE - Scratch Student": wandb.Image("./TSNE_img/scratch_stud_TSNE.png"),
+                #"TSNE - KD Student": wandb.Image("./TSNE_img/kdStudent_TSNE.png")
             })
 
 
@@ -354,6 +354,7 @@ def main():
         
 
         if "JSindex" in args.metrics:
+            start_time = time.time()
             teacher_nayerStud_JS = teacher_nayerStud_Comparator.jensen_Shannon_index()
             #kdStud_nayerStud_JS = kdStud_nayerStud_Comparator.jensen_Shannon_index()
             scratchStud_nayerStud_JS = scratchStud_nayerStud_Comparator.jensen_Shannon_index()

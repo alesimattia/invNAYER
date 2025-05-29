@@ -8,7 +8,7 @@ from sklearn.manifold import TSNE
 def compute_TSNE(model, dataset_root, batch_size=512, num_workers=4, output_path="./tsne.png"):
     
     """
-    Applica t-SNE alle predizioni del modello e restituisce il grafico come oggetto matplotlib.
+    Applica t-SNE alle predizioni del modello specificato.
 	- Il numero massimo di componenti è 2 da documentazione repo. (https://github.com/CannyLab/tsne-cuda)
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -52,4 +52,3 @@ def compute_TSNE(model, dataset_root, batch_size=512, num_workers=4, output_path
     plt.savefig(output_path)
     
     print(f"TSNE plot salvato in: {output_path}")
-    return fig
