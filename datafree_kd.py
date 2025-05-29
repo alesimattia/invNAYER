@@ -255,17 +255,17 @@ def main():
 
         if "decisionBoundary" in args.metrics:
             start_time = time.time()
-            teacher_boundary = plot_decision_boundary(teacher, dataset_location, output_path="./PCA_img/teacher_decision_boundary.png")
-            nayerStudent_boundary = plot_decision_boundary(nayerStudent, dataset_location, output_path="./PCA_img/nayerStudent_decision_boundary.png")
-            scratchStudent_boundary = plot_decision_boundary(scratchStudent, dataset_location, output_path="./PCA_img/scratchStudent_decision_boundary.png")
+            plot_decision_boundary(teacher, dataset_location, output_path="./PCA_img/teacher_decision_boundary.png")
+            plot_decision_boundary(nayerStudent, dataset_location, output_path="./PCA_img/nayerStudent_decision_boundary.png")
+            plot_decision_boundary(scratchStudent, dataset_location, output_path="./PCA_img/scratchStudent_decision_boundary.png")
             #kdStudent_boundary = plot_decision_boundary(KDstudent, dataset_location, output_path="./PCA_img/kdStudent_decision_boundary.png")
 
             args.logger.info({"Decision Boundary - Elapsed Time": time.time() - start_time})
             wandb.log({
-                "Decision Boundary - Teacher": wandb.Image(teacher_boundary),
-                "Decision Boundary - NAYER Student": wandb.Image(nayerStudent_boundary),
-                "Decision Boundary - Scratch Student": wandb.Image(scratchStudent_boundary),
-                #"Decision Boundary - KD Student": wandb.Image(kdStudent_boundary)
+                "Decision Boundary - Teacher": wandb.Image("./PCA_img/teacher_decision_boundary.png"),
+                "Decision Boundary - NAYER Student": wandb.Image("./PCA_img/nayerStudent_decision_boundary.png"),
+                "Decision Boundary - Scratch Student": wandb.Image("./PCA_img/scratchStudent_decision_boundary.png"),
+                #"Decision Boundary - KD Student": wandb.Image("./PCA_img/kdStudent_decision_boundary.png")
             })
 
 
@@ -320,10 +320,10 @@ def main():
 
         if "distance" in args.metrics: 
             start_time = time.time()
-            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/teacher_student_distance.png")
-            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/scratchStudent_nayerStudent_distance.png")
-            #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_nayerStudent_distance.png")
-            #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(png=True, save_path="./distance_IMG/kdStudent_scratchStudent_distance.png")
+            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./distance_IMG/teacher_student_distance.png")
+            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./distance_IMG/scratchStudent_nayerStudent_distance.png")
+            #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./distance_IMG/kdStudent_nayerStudent_distance.png")
+            #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./distance_IMG/kdStudent_scratchStudent_distance.png")
 
             args.logger.info(f"Pred Dist Teacher‑NAYER Student (per class): {teacher_student_dst}")
             args.logger.info(f"Pred Dist NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")
@@ -331,11 +331,12 @@ def main():
             #args.logger.info(f"Pred Dist KD student-Scratch Student (per class): {kdStudent_scratchStudent_dst}")
             #wandb.log({"Prediction Distance Teacher‑NAYER Student (per class)": wandb.Histogram(np_histogram=np.histogram(list(teacher_student_dst.values()), bins=len(teacher_student_dst)))})
             args.logger.info({"Prediction Distance - Elapsed Time": time.time() - start_time})
+            
             wandb.log({
-                'Prediction Distance Teacher‑NAYER Student (per class)': wandb.Image('./distance_IMG/teacher_student_distance.png'),
-                'Prediction Distance NAYER Student-Scratch Student (per class)': wandb.Image('./distance_IMG/scratchStudent_nayerStudent_distance.png'),
-                #'Prediction Distance KD student-NAYER Student (per class)': wandb.Image('./distance_IMG/kdStudent_nayerStudent_distance.png'),
-                #'Prediction Distance KD student-Scratch Student (per class)': wandb.Image('./distance_IMG/kdStudent_scratchStudent_distance.png')
+                'Prediction Distance - Teacher/NAYER Student (per class)': wandb.Image('./distance_IMG/teacher_student_distance.png'),
+                'Prediction Distance - NAYER Student/Scratch Student (per class)': wandb.Image('./distance_IMG/scratchStudent_nayerStudent_distance.png'),
+                #'Prediction Distance - KD student/NAYER Student (per class)': wandb.Image('./distance_IMG/kdStudent_nayerStudent_distance.png'),
+                #'Prediction Distance - KD student/Scratch Student (per class)': wandb.Image('./distance_IMG/kdStudent_scratchStudent_distance.png')
             })
 
 

@@ -75,10 +75,14 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', save_as_png=False,
     return features_pca, labels, pca
 
 
+
 def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num_workers=4, output_path="./PCA_plot/decision_boundary.png"):
+    """
+        Calcola e visualizza i decision boundary delle predizioni del modello.
+        - Le feature vengono ridotte a 2D tramite PCA.
+    """
     from matplotlib.colors import ListedColormap
 
-    # Ottieni features penultime, labels e la PCA fitted
     features_pca, labels, pca = model_PCA(
         model, components=2, dataset_root=dataset_root,
         save_as_png=False, batch_size=batch_size, num_workers=num_workers, output_path=None
@@ -91,9 +95,8 @@ def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num
     grid = np.c_[xx.ravel(), yy.ravel()]
 
     # Proietta la griglia nello spazio originale delle feature penultime (es: 512-dim)
-    grid_original = pca.inverse_transform(grid)  # shape: [90000, 512]
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    grid_tensor = torch.tensor(grid_original, dtype=torch.float32).to(device)
+    grid_original = pca.inverse_transform(grid)  # shape: [90000, 512] 
+    grid_tensor = torch.tensor(grid_original, dtype=torch.float32).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
     with torch.no_grad():
         logits = model.linear(grid_tensor)  # shape: [90000, num_classes]
         preds = torch.argmax(logits, dim=1).cpu().numpy()
@@ -109,8 +112,5 @@ def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num
     ax.set_title(f"Decision Boundary - {model.__class__.__name__}")
     ax.legend(*scatter.legend_elements(), title="Classi")
 
-    if output_path is not None:
-        plt.savefig(output_path)
-        print(f"Decision boundary salvato in: {output_path}")
-
-    return fig
+    plt.savefig(output_path)
+    print(f"DecisionBoundary salvato in: {output_path}")
