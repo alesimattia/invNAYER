@@ -115,9 +115,8 @@ class Comparator:
             dice = (2. * intersection) / (len(pred1) + len(pred2) + 1e-8)
             dice_scores[currentClass] = dice
 
-        return dice_scores
-    
-    
+        return np.histogram(list(dice_scores.values()), bins='auto')
+
 
     def jensen_Shannon_index(self):
         """

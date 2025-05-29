@@ -347,10 +347,12 @@ def main():
             scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient()
 
             args.logger.info(f"DICE score - Elapsed Time: {time.time() - start_time}")
+            
             wandb.log({
-                'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]),
-            #    'KDstudent-NayerStudent DICE score (per class)': wandb.Histogram([kdStud_nayerStud_DICE[k] for k in sorted(kdStud_nayerStud_DICE)]),
-                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Histogram([scratchStus_nayerStud_DICE[k] for k in sorted(scratchStus_nayerStud_DICE)])
+            #    'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]),
+            'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram(np_histogram=teacher_nayerStud_DICE),
+            #    'KDstudent-NayerStudent DICE score (per class)': wandb.Histogram(np_histogram=kdStud_nayerStud_DICE),
+                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Histogram(np_histogram=scratchStus_nayerStud_DICE)
             })
         
 
