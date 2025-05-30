@@ -69,7 +69,7 @@ class Comparator:
             class_labels = list(mean_distances.keys())
             distances = [mean_distances[k] for k in class_labels]
             
-            plt.figure(figsize=(8, 5))
+            plt.figure(figsize=(10, 6))
             plt.bar(class_labels, distances, color='skyblue')
             plt.xlabel("Classe")
             plt.ylabel("Distanza media")
@@ -127,16 +127,25 @@ class Comparator:
             class_labels = list(dice_scores.keys())
             scores = [dice_scores[k] for k in class_labels]
             
-            plt.figure(figsize=(10, 6))
-            plt.bar(class_labels, scores, color='skyblue')
-            plt.xlabel("Classe")
-            plt.ylabel("DICE Score")
-            plt.title(f"DICE Score tra {self.model1.__class__.__name__} e {self.model2.__class__.__name__} (per classe)")
-            plt.xticks(class_labels)
-            plt.ylim(0, 1)  # DICE score è sempre tra 0 e 1
+            # Crea figura e assi
+            fig, ax = plt.subplots(figsize=(10, 6))
+            bars = ax.bar(class_labels, scores, color='skyblue')
             
-            plt.savefig(save_path)
-            print(f"DICE_score plot salvato in: {save_path}")
+            # Aggiungi valore sopra ogni barra
+            for bar in bars:
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height,
+                    f'{height:.2f}',
+                    ha='center', va='bottom')
+            
+            ax.set_xlabel("Classe")
+            ax.set_ylabel("DICE Score")
+            ax.set_title(f"DICE Score tra {self.model1.__class__.__name__} e {self.model2.__class__.__name__}")
+            ax.set_xticks(class_labels)
+            ax.set_ylim(0, 1)  # DICE score è sempre tra 0 e 1
+            
+            plt.savefig(save_path, bbox_inches='tight', dpi=300)
+            print(f"DICE score plot salvato in: {save_path}")
             plt.close()
 
         return dice_scores

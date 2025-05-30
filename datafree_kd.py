@@ -346,7 +346,7 @@ def main():
             
             wandb.log({
             #    'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]), #ISTOGRAMMA NON FUNZIONA
-            'Teacher‑NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/teacher_nayerStud_DICE.png"),
+                'Teacher‑NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/teacher_nayerStud_DICE.png"),
             #    'KDstudent-NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/kdStud_nayerStud_DICE.png"),
                 'ScratchStudent-NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/scratchStus_nayerStud_DICE.png")
             })
