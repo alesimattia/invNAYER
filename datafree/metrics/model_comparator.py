@@ -118,6 +118,8 @@ class Comparator:
             dice = (2. * intersection) / (len(pred1) + len(pred2) + 1e-8)
             dice_scores[currentClass] = dice
 
+        print(f"DICE scores: {dice_scores}") #debug
+
         if save_path:
             import matplotlib.pyplot as plt
             import os
@@ -144,11 +146,10 @@ class Comparator:
             ax.set_xticks(class_labels)
             ax.set_ylim(0, 1)  # DICE score è sempre tra 0 e 1
             
-            plt.savefig(save_path, bbox_inches='tight', dpi=300)
-            print(f"DICE score plot salvato in: {save_path}")
+            plt.savefig(save_path)
             plt.close()
 
-        return dice_scores
+        return dice_scores, plt
 
 
     def jensen_Shannon_index(self):

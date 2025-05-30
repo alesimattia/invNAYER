@@ -338,17 +338,17 @@ def main():
 
         if "DICE" in args.metrics:
             start_time = time.time()
-            teacher_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/teacher_nayerStud_DICE.png")
+            DICE_teacher = teacher_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/teacher_nayerStud_DICE.png")
             #kdStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/kdStud_nayerStud_DICE.png")
-            scratchStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/scratchStus_nayerStud_DICE.png")
+            DICE_scratch = scratchStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/scratchStus_nayerStud_DICE.png")
 
             args.logger.info(f"DICE score - Elapsed Time: {time.time() - start_time}")
             
             wandb.log({
             #    'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]), #ISTOGRAMMA NON FUNZIONA
-                'Teacher‑NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/teacher_nayerStud_DICE.png"),
+                'Teacher‑NayerStudent DICE score (per class)': wandb.Image(DICE_teacher[1]),
             #    'KDstudent-NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/kdStud_nayerStud_DICE.png"),
-                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/scratchStus_nayerStud_DICE.png")
+                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Image(DICE_scratch[1])
             })
         
 
