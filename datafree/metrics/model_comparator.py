@@ -82,64 +82,64 @@ class Comparator:
 
 
 
-def dice_coefficient(self, save_path=None):
-    '''
-    Calcola il coefficiente di DICE per ogni classe tra le predizioni di due modelli.
-    Args:
-        save_path: percorso dove salvare l'istogramma PNG
-    Returns: 
-        dict: dizionario {classe: dice_score}
-    '''
-    preds1, preds2, groundT = [], [], []
+    def dice_coefficient(self, save_path=None):
+        '''
+        Calcola il coefficiente di DICE per ogni classe tra le predizioni di due modelli.
+        Args:
+            save_path: percorso dove salvare l'istogramma PNG
+        Returns: 
+            dict: dizionario {classe: dice_score}
+        '''
+        preds1, preds2, groundT = [], [], []
 
-    with torch.no_grad():
-        for images, targets in self.test_loader:
-            images = images.to(self.device)
-            model1_prob = torch.softmax(self.model1(images), dim=1)
-            model2_prob = torch.softmax(self.model2(images), dim=1)
-            preds1.append(torch.argmax(model1_prob, dim=1).cpu().numpy())
-            preds2.append(torch.argmax(model2_prob, dim=1).cpu().numpy())
-            groundT.append(targets.numpy())
+        with torch.no_grad():
+            for images, targets in self.test_loader:
+                images = images.to(self.device)
+                model1_prob = torch.softmax(self.model1(images), dim=1)
+                model2_prob = torch.softmax(self.model2(images), dim=1)
+                preds1.append(torch.argmax(model1_prob, dim=1).cpu().numpy())
+                preds2.append(torch.argmax(model2_prob, dim=1).cpu().numpy())
+                groundT.append(targets.numpy())
 
-    preds1 = np.concatenate(preds1)
-    preds2 = np.concatenate(preds2)
-    groundT = np.concatenate(groundT)
+        preds1 = np.concatenate(preds1)
+        preds2 = np.concatenate(preds2)
+        groundT = np.concatenate(groundT)
 
-    # Calcola DICE score per ogni classe
-    dice_scores = {}
-    for currentClass in range(self.num_classes):
-        idx = (groundT == currentClass)
-        if np.sum(idx) == 0:
-            dice_scores[currentClass] = np.nan
-            continue
-        pred1 = preds1[idx]
-        pred2 = preds2[idx]
-        intersection = np.sum(pred1 == pred2)
-        dice = (2. * intersection) / (len(pred1) + len(pred2) + 1e-8)
-        dice_scores[currentClass] = dice
+        # Calcola DICE score per ogni classe
+        dice_scores = {}
+        for currentClass in range(self.num_classes):
+            idx = (groundT == currentClass)
+            if np.sum(idx) == 0:
+                dice_scores[currentClass] = np.nan
+                continue
+            pred1 = preds1[idx]
+            pred2 = preds2[idx]
+            intersection = np.sum(pred1 == pred2)
+            dice = (2. * intersection) / (len(pred1) + len(pred2) + 1e-8)
+            dice_scores[currentClass] = dice
 
-    if save_path:
-        import matplotlib.pyplot as plt
-        import os
+        if save_path:
+            import matplotlib.pyplot as plt
+            import os
 
-        os.makedirs(os.path.dirname(save_path), exist_ok=True)
-        
-        class_labels = list(dice_scores.keys())
-        scores = [dice_scores[k] for k in class_labels]
-        
-        plt.figure(figsize=(10, 6))
-        plt.bar(class_labels, scores, color='skyblue')
-        plt.xlabel("Classe")
-        plt.ylabel("DICE Score")
-        plt.title(f"DICE Score tra {self.model1.__class__.__name__} e {self.model2.__class__.__name__} (per classe)")
-        plt.xticks(class_labels)
-        plt.ylim(0, 1)  # DICE score è sempre tra 0 e 1
-        
-        plt.savefig(save_path)
-        print(f"DICE_score plot salvato in: {save_path}")
-        plt.close()
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            
+            class_labels = list(dice_scores.keys())
+            scores = [dice_scores[k] for k in class_labels]
+            
+            plt.figure(figsize=(10, 6))
+            plt.bar(class_labels, scores, color='skyblue')
+            plt.xlabel("Classe")
+            plt.ylabel("DICE Score")
+            plt.title(f"DICE Score tra {self.model1.__class__.__name__} e {self.model2.__class__.__name__} (per classe)")
+            plt.xticks(class_labels)
+            plt.ylim(0, 1)  # DICE score è sempre tra 0 e 1
+            
+            plt.savefig(save_path)
+            print(f"DICE_score plot salvato in: {save_path}")
+            plt.close()
 
-    return dice_scores
+        return dice_scores
 
 
     def jensen_Shannon_index(self):
