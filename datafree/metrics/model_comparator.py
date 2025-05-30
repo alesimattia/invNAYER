@@ -149,7 +149,7 @@ class Comparator:
             plt.savefig(save_path)
             plt.close()
 
-        return dice_scores, plt
+        return dice_scores, fig
 
 
     def jensen_Shannon_index(self):
