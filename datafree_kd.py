@@ -203,10 +203,9 @@ def main():
             wandb.log({"Inception Score": inception_mean, "Inception Std": inception_std})
         #Altrimenti salta
 
-    #
-    #
-    ###### VALUTAZIONE MODELLI #####
-    #
+    ############################################
+    # VALUTAZIONE MODELLI
+    ############################################
     if any(m in args.metrics for m in ["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"]):
         num_classes, _, _ = registry.get_dataset(name=args.dataset, data_root=args.data_root)
         dataset_location = os.path.join(os.path.dirname(__file__), '../', args.dataset.upper())
@@ -228,19 +227,16 @@ def main():
         if "PCA" in args.metrics:
             components = 2
             start_time = time.time()
-            teacher_img = model_PCA(teacher, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers, 
-                    dataset_root=dataset_location,
-                    output_path=f"./IMG/PCA/teacher_PCA.png")
+            teacher_img = model_PCA(teacher, components=components, batch_size=args.batch_size, num_workers=args.workers,
+                    dataset_root=dataset_location, output_path=f"./IMG/PCA/teacher_PCA.png")
 
-            nayerStudent_img = model_PCA(nayerStudent, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers,
-                    dataset_root=dataset_location,
-                    output_path=f"./IMG/PCA/{args.nayer_student}_PCA.png")
+            nayerStudent_img = model_PCA(nayerStudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
+                    dataset_root=dataset_location, output_path=f"./IMG/PCA/{args.nayer_student}_PCA.png")
 
-            scratchStudent_img = model_PCA(scratchStudent, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers,
-                    dataset_root=dataset_location,
-                    output_path=f"./IMG/PCA/scratchStudent_PCA.png")
+            scratchStudent_img = model_PCA(scratchStudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
+                    dataset_root=dataset_location, output_path=f"./IMG/PCA/scratchStudent_PCA.png")
 
-           # kdStudent_img = model_PCA(KDstudent, components=components, save_as_png=True, batch_size=args.batch_size, num_workers=args.workers,
+           # kdStudent_img = model_PCA(KDstudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
             #        dataset_root=dataset_location,
             #        output_path=f"./PCA_img/{args.KD_student}_PCA.png")
 
@@ -311,19 +307,19 @@ def main():
                 #'Confusion Matrix - KD Student': wandb.Image('./IMG/confusion/KDstudent_confusion_matrix.png')
             })
 
-        #
-        #### Modulo COMPARATOR ########
-        #
+        ############################################
+        # MODULO  Comparator
+        ############################################
         teacher_nayerStud_Comparator = Comparator(teacher, nayerStudent, dataset_location, args.batch_size, args.workers)
         #kdStud_nayerStud_Comparator = Comparator(KDstudent, nayerStudent, dataset_location, args.batch_size, args.workers)
         scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
 
         if "distance" in args.metrics: 
             start_time = time.time()
-            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./IMG/distance/teacher_student_distance.png")
-            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./IMG/distance/scratchStudent_nayerStudent_distance.png")
-            #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./IMG/distance/kdStudent_nayerStudent_distance.png")
-            #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_png=True, save_path="./IMG/distance/kdStudent_scratchStudent_distance.png")
+            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(save_path="./IMG/distance/teacher_student_distance.png")
+            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance(save_path="./IMG/distance/scratchStudent_nayerStudent_distance.png")
+            #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_path="./IMG/distance/kdStudent_nayerStudent_distance.png")
+            #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_path="./IMG/distance/kdStudent_scratchStudent_distance.png")
 
             args.logger.info(f"Pred Dist Teacher‑NAYER Student (per class): {teacher_student_dst}")
             args.logger.info(f"Pred Dist NAYER Student-Scratch Student (per class): {scratchStudent_nayerStudent_dst}")
@@ -342,17 +338,17 @@ def main():
 
         if "DICE" in args.metrics:
             start_time = time.time()
-            teacher_nayerStud_DICE = teacher_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/teacher_nayerStud_DICE.png")
-            #kdStud_nayerStud_DICE = kdStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/kdStud_nayerStud_DICE.png")
-            scratchStus_nayerStud_DICE = scratchStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/scratchStus_nayerStud_DICE.png")
+            teacher_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/teacher_nayerStud_DICE.png")
+            #kdStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/kdStud_nayerStud_DICE.png")
+            scratchStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/scratchStus_nayerStud_DICE.png")
 
             args.logger.info(f"DICE score - Elapsed Time: {time.time() - start_time}")
             
             wandb.log({
             #    'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]), #ISTOGRAMMA NON FUNZIONA
-            'Teacher‑NayerStudent DICE score (per class)': wandb.Image(teacher_nayerStud_DICE),
-            #    'KDstudent-NayerStudent DICE score (per class)': wandb.Image(kdStud_nayerStud_DICE),
-                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Image(scratchStus_nayerStud_DICE)
+            'Teacher‑NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/teacher_nayerStud_DICE.png"),
+            #    'KDstudent-NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/kdStud_nayerStud_DICE.png"),
+                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/scratchStus_nayerStud_DICE.png")
             })
         
 
@@ -772,18 +768,21 @@ def train(synthesizer, model, criterion, optimizer, args, dataLoader = None):
 
 
                            # ↓ da train_scratch. Equivale a dataLoader
-def train_distilled_student(train_loader, teacher, nayerStudent, distilledStudent, optimizer, args):
-    import torch.nn.functional as F
+def train_distilled_student(train_loader, teacher, distilledStudent, optimizer, args):
+    """
+        Addestra un "distilledStudent" combinando hard labels (dal dataset) e soft labels (dal teacher)
+    """
+    
     global best_acc1
     loss_metric = datafree.metrics.RunningLoss(nn.CrossEntropyLoss(reduction='sum'))
     acc_metric = datafree.metrics.TopkAccuracy(topk=(1, 5))
-    #device = args.gpu if args.gpu is not None else 'cpu'
+ 
+    ce_loss = nn.CrossEntropyLoss()
+    kl_loss = nn.KLDivLoss(reduction='batchmean')
 
-    distilledStudent.train()
     teacher.eval()
-    #nayerStudent.eval()
-    bce_loss = torch.nn.BCEWithLogitsLoss()
-    kl_loss = torch.nn.KLDivLoss(reduction='batchmean')
+    distilledStudent.train()
+    
 
     for i, (images, targets) in enumerate(train_loader):
         if args.gpu is not None:
@@ -795,27 +794,26 @@ def train_distilled_student(train_loader, teacher, nayerStudent, distilledStuden
         with args.autocast(enabled=args.fp16):
             with torch.no_grad():
                 teacher_logits = teacher(images)
-                #nayer_logits = nayerStudent(images)
             student_logits = distilledStudent(images)
-            # BCE tra output studente e target del teacher (one-hot)
-            #teacher_targets = F.one_hot(targets, num_classes=teacher_logits.shape[1]).float()
-            '''Sfrutta etichette reali'''
-            loss_bce = bce_loss(student_logits, targets)
-            # KL tra output studente e output nayerStudent (softmax)
+            
+            # 1 Hard Loss (CrossEntropy con etichette reali)
+            loss_ce = ce_loss(student_logits, targets)
+            
+            # 2 Soft Loss (KL con predizioni teacher "ammorbidite")
             loss_kl = kl_loss(
-                F.log_softmax(student_logits, dim=1),
-                F.softmax(teacher_logits, dim=1)
-            )
-            '''alpha 1 => addestramento classico con supervisione
-               alpha 0 => sfrutta etichette insegnante DFKD'''
-            args.logger.info(f"Bce Loss:{loss_bce}, KL Loss:{loss_kl}")
-            loss = args.alpha * loss_bce + (1 - args.alpha) * loss_kl
-            #*****loss_crossE**** = criterion(output, target)
+                F.log_softmax(student_logits/args.T, dim=1), # temperatura per "ammorbidire" le predizioni
+                F.softmax(teacher_logits/args.T, dim=1)
+            ) * (args.T * args.T)  # necessario per corretto scaling come nel paper di Hinton
+            
+            # Loss totale pesata con alpha
+            loss = args.alpha * loss_ce + (1 - args.alpha) * loss_kl
+            args.logger.info(f"CE Loss:{loss_ce}, KL Loss:{loss_kl}")
 
-        # measure accuracy and record loss
+        # Metriche
         acc_metric.update(student_logits, targets)
         loss_metric.update(student_logits, targets)
 
+        # Backward e optimize
         if args.fp16:
             scaler = args.scaler if hasattr(args, 'scaler') else None
             if scaler is not None:
@@ -829,13 +827,14 @@ def train_distilled_student(train_loader, teacher, nayerStudent, distilledStuden
             loss.backward()
             optimizer.step()
 
+        # Log
         if args.print_freq > 0 and i % args.print_freq == 0:
             (train_acc1, train_acc5), train_loss = acc_metric.get_results(), loss_metric.get_results()
             args.logger.info('[kdTrain] Epoch={current_epoch} Iter={i}/{total_iters}, train_acc@1={train_acc1:.4f}, '
-                             'train_acc@5={train_acc5:.4f}, train_Loss={train_loss:.4f}, Lr={lr:.4f}'
-                             .format(current_epoch=args.current_epoch, i=i, total_iters=len(train_loader),
-                                     train_acc1=train_acc1, train_acc5=train_acc5, train_loss=train_loss,
-                                     lr=optimizer.param_groups[0]['lr']))
+                         'train_acc@5={train_acc5:.4f}, train_Loss={train_loss:.4f}, Lr={lr:.4f}'
+                         .format(current_epoch=args.current_epoch, i=i, total_iters=len(train_loader),
+                                 train_acc1=train_acc1, train_acc5=train_acc5, train_loss=train_loss,
+                                 lr=optimizer.param_groups[0]['lr']))
             loss_metric.reset(), acc_metric.reset()
 
 

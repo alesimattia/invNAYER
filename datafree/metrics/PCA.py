@@ -5,12 +5,17 @@ import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
-def model_PCA(model, components=3, dataset_root='../CIFAR10', save_as_png=False, batch_size=512, num_workers=4, output_path='./IMG/PCA/PCA_plot.png'):
+def model_PCA(model, components=3, dataset_root='../CIFAR10', output_path=None, batch_size=512, num_workers=4):
     """
     Estrae le 3 caratteristiche principali del modello mediante PCA e le 
     visualizza in uno spazio 3D
 
     Memorizza su FS il grafico delle 3 componenti principali
+    Returns:
+        - features_pca: le caratteristiche ridotte a 2D o 3D
+        - labels: le etichette delle classi
+        - pca: oggetto PCA usato per la trasformazione
+        - fig: (opzionale) figura matplotlib con il grafico delle componenti principali
     """
     from mpl_toolkits.mplot3d import Axes3D
 
@@ -67,7 +72,7 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', save_as_png=False,
     ax.legend()
 
 
-    if save_as_png and output_path is not None:
+    if output_path is not None:
         plt.savefig(output_path)
         print(f"PCA {components}D plot salvato in: {output_path}")
         plt.close(fig)
@@ -83,10 +88,9 @@ def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num
     """
     from matplotlib.colors import ListedColormap
 
-    features_pca, labels, pca = model_PCA(
-        model, components=2, dataset_root=dataset_root,
-        save_as_png=False, batch_size=batch_size, num_workers=num_workers, output_path=None
-    )
+    features_pca, labels, pca = model_PCA( model, components=2, dataset_root=dataset_root,
+                                        batch_size=batch_size, num_workers=num_workers)
+
 
     # Crea una griglia nello spazio PCA 2D
     x_min, x_max = features_pca[:, 0].min() - 1, features_pca[:, 0].max() + 1
@@ -102,15 +106,24 @@ def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num
         preds = torch.argmax(logits, dim=1).cpu().numpy()
     preds = preds.reshape(xx.shape)
 
-    # Plot
+
+    num_classes = len(np.unique(labels))
+    print(f"Numero di classi uniche trovate: {num_classes}")  # debug
+    
+    # Crea una colormap con esattamente 10 colori
+    colors = plt.cm.tab10(np.linspace(0, 1, num_classes))
+    cmap = ListedColormap(colors)
+    
     fig, ax = plt.subplots(figsize=(10, 8))
-    cmap = ListedColormap(plt.cm.tab10.colors[:len(np.unique(labels))])
-    ax.contourf(xx, yy, preds, alpha=0.3, cmap=cmap)
+    contour = ax.contourf(xx, yy, preds, alpha=0.3, cmap=cmap, levels=np.arange(11)-0.5)  # forza 10 livelli
     scatter = ax.scatter(features_pca[:, 0], features_pca[:, 1], c=labels, cmap=cmap, edgecolor='k', s=20)
-    ax.set_xlabel("PCA1")
-    ax.set_ylabel("PCA2")
+
+    plt.colorbar(contour, ax=ax, ticks=range(num_classes))
+    ax.set_xlabel("PCA 1")
+    ax.set_ylabel("PCA 2")
     ax.set_title(f"Decision Boundary - {model.__class__.__name__}")
     ax.legend(*scatter.legend_elements(), title="Classi")
 
-    plt.savefig(output_path)
-    print(f"DecisionBoundary salvato in: {output_path}")
+    if output_path:
+        plt.savefig(output_path)
+        print(f"DecisionBoundary salvato in: {output_path}")
