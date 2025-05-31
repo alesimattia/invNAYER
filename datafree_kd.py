@@ -327,7 +327,7 @@ def main():
                 'Prediction Distance (per class)': wandb.Image(sideBy_barplot(f"./IMG/distance/{args.log_tag}.png",
                                                                                 teacher_nayerStud_dst.values(), scratchStudent_nayerStudent_dst.values(),
                                                                                 xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_dst.keys()),
-                                                                                title="Prediction Distance (Frobenius Norm)", 
+                                                                                title="Prediction Distance (Frobenius Norm) per class", 
                                                                                 labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent"]
                                                                             )) 
             })
@@ -344,7 +344,7 @@ def main():
                 'DICE score (per class)': wandb.Image(sideBy_barplot( f"./IMG/DICE/{args.log_tag}.png", 
                                                                         DICE_teacher_nayerS.values(), DICE_scratch_nayerS.values(), 
                                                                         xlabel="Classe", ylabel="Score", xticks=list(DICE_scratch_nayerS.keys()),
-                                                                        title="DICE Score", 
+                                                                        title="DICE Score (per class)", 
                                                                         labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent"]
                                                                     ))
             })
@@ -358,14 +358,18 @@ def main():
 
             args.logger.info(f"Jensen-Shannon Index - Elapsed Time: {time.time() - start_time}")
             wandb.log({
-                'Jensen-Shannon Index - Teacher/Nayer Student': teacher_nayerStud_JS,
-            #    'Jensen-Shannon Index - KDstudent/Nayer Student': kdStud_nayerStud_JS,
-                'Jensen-Shannon Index - ScratchStudent/Nayer Student': scratchStud_nayerStud_JS
+                'Jensen-Shannon Index (per class)': wandb.Image(sideBy_barplot( f"./IMG/JS/{args.log_tag}.png", 
+                                                                        teacher_nayerStud_JS.values(), scratchStud_nayerStud_JS.values(), 
+                                                                        xlabel="Classe", ylabel="JS Index", xticks=list(scratchStud_nayerStud_JS.keys()),
+                                                                        title="Jensen-Shannon Index (per class)", 
+                                                                        labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent"]
+                                                                ))
             })
             
-        # Sincronizza automaticamente i risultati su wandb    
-        result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
-        print(result.stdout)
+        # Sincronizza automaticamente i risultati su wandb   
+        ''' NETWORK CALL NON FUNZIONANTI SU CINECA''' 
+        #result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
+        #print(result.stdout)
 
 
 

@@ -106,22 +106,29 @@ class Comparator:
 
     def jensen_Shannon_index(self):
         """
-        Calcola l'indice Jensen-Shannon medio tra le predizioni (softmax) di due modelli su un dataset.
-        Restituisce il valore medio su tutte le immagini.
+        Calcola l'indice Jensen-Shannon tra le predizioni (softmax) di due modelli su un dataset.
+        Returns: 
+            dict: dizionario {classe: js_mean} con la media dell'indice JS per ogni classe
         """
         from scipy.spatial.distance import jensenshannon
-        js_distances = []
+        class_js_distances = {i: [] for i in range(self.num_classes)}
 
         with torch.no_grad():
-            for images, _ in self.test_loader:
+            for images, targets in self.test_loader:
                 images = images.to(self.device)
                 out1 = torch.softmax(self.model1(images), dim=1).cpu().numpy()
                 out2 = torch.softmax(self.model2(images), dim=1).cpu().numpy()
                 
                 # Calcola JS per ogni immagine del batch
-                for p, q in zip(out1, out2):
+                for p, q, target in zip(out1, out2, targets):
                     js = jensenshannon(p, q, base=2)  # base=2 per JS index in [0,1]
-                    js_distances.append(js)
+                    class_js_distances[target.item()].append(js)
 
-        js_mean = np.mean(js_distances)
-        return js_mean
+        # Calcola la media per ogni classe
+        js_means = {
+            class_idx: np.mean(distances) if distances else np.nan 
+            for class_idx, distances in class_js_distances.items()
+        }
+
+        print(f"Jensen-Shannon Index per classe: {js_means}") #debug
+        return js_means
