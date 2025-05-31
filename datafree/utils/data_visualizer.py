@@ -1,6 +1,6 @@
 def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel="X", ylabel="Y", xticks=[], width=0.8):
 	"""
-	Salva su barplot affiancato di più liste in ingresso.
+	Salva in .png barplot con più liste di dati in ingresso. In tal caso le barre sono affiancate.
 	
 	Args:
 		save_path (str): Percorso dove salvare il file .png
@@ -12,7 +12,7 @@ def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel=
 		colors (list): Lista di colori per le barre
 		width (float): Larghezza delle barre
 	Returns:
-		Path di salvataggio
+		Path di salvataggio file .png
 	"""
 	import matplotlib.pyplot as plt
 	import numpy as np

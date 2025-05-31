@@ -28,8 +28,8 @@ parser = argparse.ArgumentParser(description='Inversion loss NAYER')
 
 # Da "imagenet_inversion.py" coefficient per loss_aux
 parser.add_argument('--tv_l1', type=float, default=0.0, help='coefficient for total variation L1 loss')
-parser.add_argument('--tv_l2', type=float, default=0.0001, help='coefficient for total variation L2 loss')
-parser.add_argument('--l2', type=float, default=0.00001, help='l2 loss on the image')
+parser.add_argument('--tv_l2', type=float, default=0.0, help='coefficient for total variation L2 loss')
+parser.add_argument('--l2', type=float, default=0.0, help='l2 loss on the image')
 parser.add_argument('--r_feature', type=float, default=0.05, help='coefficient for feature distribution regularization')
 parser.add_argument('--first_bn_multiplier', type=float, default=10., help='additional multiplier on first bn layer of R_feature')
 parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coefficient for the main loss in optimization')
@@ -366,8 +366,9 @@ def main():
                                                                 ))
             })
             
-        # Sincronizza automaticamente i risultati su wandb   
+      
         ''' NETWORK CALL NON FUNZIONANTI SU CINECA''' 
+        # Sincronizza automaticamente i risultati su wandb 
         #result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
         #print(result.stdout)
 
@@ -663,7 +664,7 @@ def main_worker(gpu, ngpus_per_node, args):
             # del vis_name
             ''' Modificato con dataLoader al posto del modulo synthesizer '''
             if args.train_distilled_student:
-                train_distilled_student(dataLoader, teacher, nayerStudent, distilledStudent, optimizer, args)
+                train_distilled_student(dataLoader, teacher, student, optimizer, args)
             else:
                 #NAYER default function
                 train(synthesizer, [student, teacher], criterion, optimizer, args)  # kd_steps
@@ -784,7 +785,6 @@ def train_distilled_student(train_loader, teacher, distilledStudent, optimizer, 
 
     teacher.eval()
     distilledStudent.train()
-    
 
     for i, (images, targets) in enumerate(train_loader):
         if args.gpu is not None:
