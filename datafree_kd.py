@@ -22,7 +22,7 @@ from datafree.metrics.PCA import plot_decision_boundary
 from datafree.metrics.TSNE import compute_TSNE
 from datafree.metrics.model_comparator import Comparator
 from datafree.metrics.confusionMatrix import compute_confusion_matrix
-
+from datafree.utils.data_visualizer import sideBy_barplot
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
 
@@ -307,6 +307,7 @@ def main():
                 #'Confusion Matrix - KD Student': wandb.Image('./IMG/confusion/KDstudent_confusion_matrix.png')
             })
 
+
         ############################################
         # MODULO  Comparator
         ############################################
@@ -338,19 +339,28 @@ def main():
 
         if "DICE" in args.metrics:
             start_time = time.time()
-            DICE_teacher = teacher_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/teacher_nayerStud_DICE.png")
+            DICE_teacher_nayerS = teacher_nayerStud_Comparator.dice_coefficient()
             #kdStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/kdStud_nayerStud_DICE.png")
-            DICE_scratch = scratchStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/scratchStus_nayerStud_DICE.png")
+            DICE_scratch_nayerS = scratchStud_nayerStud_Comparator.dice_coefficient()
 
             args.logger.info(f"DICE score - Elapsed Time: {time.time() - start_time}")
             
             wandb.log({
-            #    'Teacher‑NayerStudent DICE score (per class)': wandb.Histogram([teacher_nayerStud_DICE[k] for k in sorted(teacher_nayerStud_DICE)]), #ISTOGRAMMA NON FUNZIONA
-                'Teacher‑NayerStudent DICE score (per class)': wandb.Image(DICE_teacher[1]),
+                'DICE score (per class) - Teacher / NayerStudent ': wandb.Image(sideBy_barplot( "./IMG/DICE/teacher_nayerStud_DICE.png", 
+                                                                        DICE_teacher_nayerS.values(), DICE_scratch_nayerS.values(), 
+                                                                        xlabel="Classe", ylabel="Score", xticks=DICE_scratch_nayerS.keys(),
+                                                                        title="DICE Score Teacher / NAYER Student", 
+                                                                        labels=["Teacher", "NayerStudent"]
+                                                                    )),
             #    'KDstudent-NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/kdStud_nayerStud_DICE.png"),
-                'ScratchStudent-NayerStudent DICE score (per class)': wandb.Image(DICE_scratch[1])
+                'DICE score (per class) - ScratchStudent / NayerStudent ': wandb.Image(sideBy_barplot("./IMG/DICE/scratch_nayerStud_DICE.png", 
+                                                                                DICE_scratch_nayerS.values(), DICE_teacher_nayerS.values(), 
+                                                                                xlabel="Classe", ylabel="Score", xticks=DICE_teacher_nayerS.keys(),
+                                                                                title="DICE Score Scratch / NAYER Student", 
+                                                                                labels=["ScratchStudent", "NayerStudent"]
+                                                                    ))
             })
-        
+
 
         if "JSindex" in args.metrics:
             start_time = time.time()

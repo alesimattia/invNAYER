@@ -36,7 +36,7 @@ class Comparator:
         
 
 
-    def prediction_distance(self, save_path=None):
+    def prediction_distance(self):
         '''
         Calcola la NORMA MATRICIALE (Frobenius) tra le predizioni di due modelli, per ogni classe.
         - Rallenta l'esecuzione
@@ -82,13 +82,11 @@ class Comparator:
 
 
 
-    def dice_coefficient(self, save_path=None):
+    def dice_coefficient(self):
         '''
         Calcola il coefficiente di DICE per ogni classe tra le predizioni di due modelli.
-        Args:
-            save_path: percorso dove salvare l'istogramma PNG
         Returns: 
-            dict: dizionario {classe: dice_score}
+            dizionario {classe: dice_score}
         '''
         preds1, preds2, groundT = [], [], []
 
@@ -116,40 +114,10 @@ class Comparator:
             pred2 = preds2[idx]
             intersection = np.sum(pred1 == pred2)
             dice = (2. * intersection) / (len(pred1) + len(pred2) + 1e-8)
-            dice_scores[currentClass] = dice
+            dice_scores[currentClass] = dice # DICE score è sempre tra 0 e 1
 
         print(f"DICE scores: {dice_scores}") #debug
-
-        if save_path:
-            import matplotlib.pyplot as plt
-            import os
-
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            
-            class_labels = list(dice_scores.keys())
-            scores = [dice_scores[k] for k in class_labels]
-            
-            # Crea figura e assi
-            fig, ax = plt.subplots(figsize=(10, 6))
-            bars = ax.bar(class_labels, scores, color='skyblue')
-            
-            # Aggiungi valore sopra ogni barra
-            for bar in bars:
-                height = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{height:.2f}',
-                    ha='center', va='bottom')
-            
-            ax.set_xlabel("Classe")
-            ax.set_ylabel("DICE Score")
-            ax.set_title(f"DICE Score tra {self.model1.__class__.__name__} e {self.model2.__class__.__name__}")
-            ax.set_xticks(class_labels)
-            ax.set_ylim(0, 1)  # DICE score è sempre tra 0 e 1
-            
-            plt.savefig(save_path)
-            plt.close()
-
-        return dice_scores, fig
+        return dice_scores
 
 
     def jensen_Shannon_index(self):
