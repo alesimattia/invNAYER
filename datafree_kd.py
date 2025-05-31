@@ -317,50 +317,35 @@ def main():
 
         if "distance" in args.metrics: 
             start_time = time.time()
-            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance()
+            teacher_nayerStud_dst = teacher_nayerStud_Comparator.prediction_distance()
             scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance()
             #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance()
             #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance()
 
+            args.logger.info(f"Prediction Distance - Elapsed Time: {time.time() - start_time}")
             wandb.log({ 
-                'Prediction Distance (per class) - Teacher/NAYER Student': wandb.Image(sideBy_barplot("./IMG/distance/teacher_nayerStud_distance.png",
-                                                                                teacher_student_dst.values(), scratchStudent_nayerStudent_dst.values(),
-                                                                                xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_student_dst.keys()),
-                                                                                title="Prediction Distance - Teacher / NAYER Student", 
-                                                                                labels=["Teacher", "NayerStudent"]
-                                                                            )),
-                'Prediction Distance (per class) - ScratchStudent/NAYER Student': wandb.Image(sideBy_barplot("./IMG/distance/scratchStudent_nayerStud_distance.png",
-                                                                                        teacher_student_dst.values(), scratchStudent_nayerStudent_dst.values(), 
-                                                                                        xlabel="Classe", ylabel="Distanza", xticks=list(scratchStudent_nayerStudent_dst.keys()),
-                                                                                        title="Prediction Distance - Scratch / NAYER Student",
-                                                                                        labels=["ScratchStudent", "NayerStudent"]
-                                                                                    ))
-                #'Prediction Distance - KD student/NAYER Student (per class)': wandb.Image('./IMG/distance/kdStudent_nayerStudent_distance.png'),
-                #'Prediction Distance - KD student/Scratch Student (per class)': wandb.Image('./IMG/distance/kdStudent_scratchStudent_distance.png')
+                'Prediction Distance (per class)': wandb.Image(sideBy_barplot(f"./IMG/distance/{args.log_tag}.png",
+                                                                                teacher_nayerStud_dst.values(), scratchStudent_nayerStudent_dst.values(),
+                                                                                xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_dst.keys()),
+                                                                                title="Prediction Distance (Frobenius Norm)", 
+                                                                                labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent"]
+                                                                            )) 
             })
 
 
         if "DICE" in args.metrics:
             start_time = time.time()
             DICE_teacher_nayerS = teacher_nayerStud_Comparator.dice_coefficient()
-            #kdStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/kdStud_nayerStud_DICE.png")
             DICE_scratch_nayerS = scratchStud_nayerStud_Comparator.dice_coefficient()
+            #kdStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/kdStud_nayerStud_DICE.png")
 
             args.logger.info(f"DICE score - Elapsed Time: {time.time() - start_time}")
-            
             wandb.log({
-                'DICE score (per class) - Teacher / NayerStudent ': wandb.Image(sideBy_barplot( "./IMG/DICE/teacher_nayerStud_DICE.png", 
+                'DICE score (per class)': wandb.Image(sideBy_barplot( f"./IMG/DICE/{args.log_tag}.png", 
                                                                         DICE_teacher_nayerS.values(), DICE_scratch_nayerS.values(), 
                                                                         xlabel="Classe", ylabel="Score", xticks=list(DICE_scratch_nayerS.keys()),
-                                                                        title="DICE Score - Teacher / NAYER Student", 
-                                                                        labels=["Teacher", "NayerStudent"]
-                                                                    )),
-            #    'KDstudent-NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/kdStud_nayerStud_DICE.png"),
-                'DICE score (per class) - ScratchStudent / NayerStudent ': wandb.Image(sideBy_barplot("./IMG/DICE/scratch_nayerStud_DICE.png", 
-                                                                                DICE_scratch_nayerS.values(), DICE_teacher_nayerS.values(), 
-                                                                                xlabel="Classe", ylabel="Score", xticks=list(DICE_teacher_nayerS.keys()),
-                                                                                title="DICE Score - Scratch / NAYER Student", 
-                                                                                labels=["ScratchStudent", "NayerStudent"]
+                                                                        title="DICE Score", 
+                                                                        labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent"]
                                                                     ))
             })
 
