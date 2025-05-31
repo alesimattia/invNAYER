@@ -43,7 +43,7 @@ def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel=
 	ax.set_ylabel(ylabel)
 	ax.set_title(title)
 	ax.set_xticks(x, labels=xticks)
-	ax.legend()
+	ax.legend(loc='best')
 
 	plt.tight_layout()
 	plt.savefig(save_path, bbox_inches='tight')

@@ -37,15 +37,15 @@ class Comparator:
 
 
     def prediction_distance(self):
-        '''
+        """
         Calcola la NORMA MATRICIALE (Frobenius) tra le predizioni di due modelli, per ogni classe.
-        - Rallenta l'esecuzione
-        Params:
-            - save_path : percorso dove salvare il grafico PNG delle distanze.
+        
+        Args:
+            ---
         Returns: 
-            - Dizionario {classe: distanza_media}
-            - Se save_path è valorizzato, esporta il grafico .PNG delle distanze per ogni classe.
-        '''
+            Dizionario {classe: distanza_media}
+            Se save_path è valorizzato, esporta il grafico .PNG delle distanze per ogni classe.
+        """
 
         class_distances = {i: [] for i in range(self.num_classes)}
         
@@ -61,23 +61,7 @@ class Comparator:
 
         # Distanza MEDIA per ogni classe
         mean_distances = {class_idx: np.mean(class_distances[class_idx]) for class_idx in class_distances}
-        
-        if save_path:
-            import matplotlib.pyplot as plt
-            import os
-            os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            class_labels = list(mean_distances.keys())
-            distances = [mean_distances[k] for k in class_labels]
-            
-            plt.figure(figsize=(10, 6))
-            plt.bar(class_labels, distances, color='skyblue')
-            plt.xlabel("Classe")
-            plt.ylabel("Distanza media")
-            plt.title(f"Distanza media tra le predizioni del modello {self.model1.__class__.__name__} e {self.model2.__class__.__name__} per ogni classe")
-            plt.xticks(class_labels)
-            plt.savefig(save_path)
-            plt.close()
-            
+
         return mean_distances
 
 
