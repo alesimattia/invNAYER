@@ -348,14 +348,14 @@ def main():
             wandb.log({
                 'DICE score (per class) - Teacher / NayerStudent ': wandb.Image(sideBy_barplot( "./IMG/DICE/teacher_nayerStud_DICE.png", 
                                                                         DICE_teacher_nayerS.values(), DICE_scratch_nayerS.values(), 
-                                                                        xlabel="Classe", ylabel="Score", xticks=DICE_scratch_nayerS.keys(),
+                                                                        xlabel="Classe", ylabel="Score", xticks=list(DICE_scratch_nayerS.keys()),
                                                                         title="DICE Score Teacher / NAYER Student", 
                                                                         labels=["Teacher", "NayerStudent"]
                                                                     )),
             #    'KDstudent-NayerStudent DICE score (per class)': wandb.Image("./IMG/DICE/kdStud_nayerStud_DICE.png"),
                 'DICE score (per class) - ScratchStudent / NayerStudent ': wandb.Image(sideBy_barplot("./IMG/DICE/scratch_nayerStud_DICE.png", 
                                                                                 DICE_scratch_nayerS.values(), DICE_teacher_nayerS.values(), 
-                                                                                xlabel="Classe", ylabel="Score", xticks=DICE_teacher_nayerS.keys(),
+                                                                                xlabel="Classe", ylabel="Score", xticks=list(DICE_teacher_nayerS.keys()),
                                                                                 title="DICE Score Scratch / NAYER Student", 
                                                                                 labels=["ScratchStudent", "NayerStudent"]
                                                                     ))

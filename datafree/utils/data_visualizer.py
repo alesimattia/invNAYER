@@ -22,7 +22,7 @@ def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel=
 	fig, ax = plt.subplots(figsize=(10, 6))
 	
 	n_lists = len(data_lists)
-	
+	x = np.arange(len(data_lists[0]))
 	width = width / n_lists  # Larghezza effettiva per ogni barra
 	colors = plt.cm.tab10(np.linspace(0, 1, n_lists))
 	
@@ -31,7 +31,7 @@ def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel=
 
 	for i, data in enumerate(data_lists):
 		offset = width * i - (width * (n_lists-1))/2
-		bars = ax.bar(xticks + offset, data, width, label=labels[i], color=colors[i])
+		bars = ax.bar(x + offset, data, width, label=labels[i], color=colors[i])
 		
 		# Aggiunge valori sopra le barre
 		for bar in bars:
@@ -42,7 +42,7 @@ def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel=
 	ax.set_xlabel(xlabel)
 	ax.set_ylabel(ylabel)
 	ax.set_title(title)
-	ax.set_xticks(xticks)
+	ax.set_xticks(x, labels=xticks)
 	ax.legend()
 
 	plt.tight_layout()
