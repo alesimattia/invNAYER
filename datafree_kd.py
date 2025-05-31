@@ -317,10 +317,10 @@ def main():
 
         if "distance" in args.metrics: 
             start_time = time.time()
-            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance(save_path="./IMG/distance/teacher_student_distance.png")
-            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance(save_path="./IMG/distance/scratchStudent_nayerStudent_distance.png")
-            #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_path="./IMG/distance/kdStudent_nayerStudent_distance.png")
-            #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance(save_path="./IMG/distance/kdStudent_scratchStudent_distance.png")
+            teacher_student_dst = teacher_nayerStud_Comparator.prediction_distance()
+            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance()
+            #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance()
+            #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance()
 
             wandb.log({ 
                 'Prediction Distance (per class) - Teacher/NAYER Student': wandb.Image(sideBy_barplot("./IMG/distance/teacher_nayerStud_distance.png",
