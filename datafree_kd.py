@@ -504,7 +504,7 @@ def main_worker(gpu, ngpus_per_node, args):
         si vogliano calcolare solo le metriche
     '''
     if args.metrics: 
-        return teacher, student, None, None
+        return teacher, student
     
     criterion = datafree.criterions.KLDiv(T=args.T)
 
