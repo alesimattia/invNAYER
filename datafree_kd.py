@@ -503,7 +503,7 @@ def main_worker(gpu, ngpus_per_node, args):
         Salta la sintetizzazione di immagini nel caso in cui 
         si vogliano calcolare solo le metriche
     '''
-    if args.metrics is not "Off": 
+    if args.metrics != "Off": 
         return teacher, student
     
     criterion = datafree.criterions.KLDiv(T=args.T)
