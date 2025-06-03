@@ -499,12 +499,10 @@ def main_worker(gpu, ngpus_per_node, args):
     student = prepare_model(student)
     teacher = prepare_model(teacher)
 
-    '''
-        Salta la sintetizzazione di immagini nel caso in cui 
-        si vogliano calcolare solo le metriche
-    '''
-    if args.metrics != "Off": 
-        return teacher, student
+
+    if "Off" not in set(args.metrics):
+        args.logger.info("Calcolo metriche: NO TRAINING")
+        return
     
     criterion = datafree.criterions.KLDiv(T=args.T)
 
@@ -612,6 +610,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # Train Loop
     ############################################
     if args.train_distilled_student:
+        print("DEBUG: args.train_distilled_student (riga 613)")
         '''
             Da:  train_scratch.py
             Genera un train_loader o dataLoader per lo studente da distillare
@@ -625,11 +624,9 @@ def main_worker(gpu, ngpus_per_node, args):
         else:
             train_sampler = None
         dataLoader = torch.utils.data.DataLoader(
-            train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
-            num_workers=args.workers, pin_memory=True, sampler=train_sampler)
+                            train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
+                            num_workers=args.workers, pin_memory=True, sampler=train_sampler)
         evaluator = datafree.evaluators.classification_evaluator(val_loader)
-
-        distilledStudent = registry.get_model(args.student, num_classes=num_classes).to(device)
 
 
     for epoch in range(args.start_epoch, args.epochs):
@@ -659,8 +656,8 @@ def main_worker(gpu, ngpus_per_node, args):
             del vis_results
             # del vis_image
             # del vis_name
-            ''' Modificato con dataLoader al posto del modulo synthesizer '''
             if args.train_distilled_student:
+                ''' Modificato con dataLoader al posto del modulo synthesizer '''
                 train_distilled_student(dataLoader, teacher, student, optimizer, args)
             else:
                 #NAYER default function
@@ -707,7 +704,6 @@ def main_worker(gpu, ngpus_per_node, args):
     if args.rank <= 0:
         args.logger.info("Best: %.4f" % best_acc1)
         args.logger.info("Generation Cost: %1.3f" % (time_cost / 3600.))
-    return teacher, student, synthesizer, evaluator
 
 
 # do the distillation
@@ -716,7 +712,6 @@ def train(synthesizer, model, criterion, optimizer, args, dataLoader = None):
     loss_metric = datafree.metrics.RunningLoss(datafree.criterions.KLDiv(reduction='sum'))
     acc_metric = datafree.metrics.TopkAccuracy(topk=(1, 5))
     student, teacher = model
-    optimizer = optimizer
     student.train()
     teacher.eval()
     for i in range(args.kd_steps):
@@ -767,14 +762,14 @@ def train(synthesizer, model, criterion, optimizer, args, dataLoader = None):
             loss_metric.reset(), acc_metric.reset()
 
 
-                           # ↓ da train_scratch. Equivale a dataLoader
+                           # ↓ da train_scratch.py. Equivale a dataLoader
 def train_distilled_student(train_loader, teacher, distilledStudent, optimizer, args):
     """
         Addestra un "distilledStudent" combinando hard labels (dal dataset) e soft labels (dal teacher)
     """
-    
+    print(f"DEBUG: inside train_distilled_student()")
     global best_acc1
-    loss_metric = datafree.metrics.RunningLoss(nn.CrossEntropyLoss(reduction='sum'))
+    loss_metric = datafree.metrics.RunningLoss(datafree.criterions.KLDiv(T=args.T, reduction='sum'))
     acc_metric = datafree.metrics.TopkAccuracy(topk=(1, 5))
  
     ce_loss = nn.CrossEntropyLoss()
@@ -804,9 +799,9 @@ def train_distilled_student(train_loader, teacher, distilledStudent, optimizer, 
                 F.softmax(teacher_logits/args.T, dim=1)
             ) * (args.T * args.T)  # necessario per corretto scaling come nel paper di Hinton
             
-            # Loss totale pesata con alpha
-            loss = args.alpha * loss_ce + (1 - args.alpha) * loss_kl
-            args.logger.info(f"CE Loss:{loss_ce}, KL Loss:{loss_kl}")
+            # Combinazione delle due loss
+            loss = args.alpha * loss_kl + (1 - args.alpha) * loss_ce
+            args.logger.info(f"CE Loss:{loss_ce}, KL Loss:{loss_kl}, Combined Loss:{loss}")
 
         # Metriche
         acc_metric.update(student_logits, targets)
