@@ -488,11 +488,6 @@ def main_worker(gpu, ngpus_per_node, args):
     student = registry.get_model(args.student, num_classes=num_classes)
     teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
 
-    if args.train_distilled_student:
-        nayerStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
-        nayerStudent.load_state_dict(torch.load(args.nayer_student, map_location='cpu')['state_dict'])
-        nayerStudent = prepare_model(nayerStudent)
-
 
     args.normalizer = datafree.utils.Normalizer(**registry.NORMALIZE_DICT[args.dataset])
     # pretrain = torch.load('checkpoints/pretrained/%s_%s.pth' % (args.dataset, args.teacher),
