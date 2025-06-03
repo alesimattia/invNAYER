@@ -36,7 +36,8 @@ parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coe
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
 # Metriche
 parser.add_argument('--metrics', nargs='+', help='Lista delle metriche da calcolare: PCA, TSNE, distance, DICE, confusionMatrix, JSindex', 
-                    default=[None], choices=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"])
+                    default=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"], 
+                    choices=[None, "PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"])
 # Modelli preaddestrati
 parser.add_argument('--nayer_student', type=str, default="best_c10r34r18-tvL2-0.0005__l2-0.00001", 
                     help='Path modello .pth preaddestrato con NAYER classico; per fare poi train di KD_student')
