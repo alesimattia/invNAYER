@@ -43,7 +43,7 @@ parser.add_argument('--nayer_student', type=str, default="best_c10r34r18-tvL2-0.
                     help='Path modello .pth preaddestrato con NAYER classico; per fare poi train di KD_student')
 parser.add_argument('--scratch_student', type=str, default='cifar10_resnet18_100ep', 
                     help='Path modello .pth addestrato con train_scratch.py')
-parser.add_argument('--KD_student', type=str, default='KD_student_best_c10r34r18-tvL2-0.0005__l2-0.00001',
+parser.add_argument('--KD_student', type=str, default='KD_student_alpha02',
                     help='Path modello .pth che combini predizioni insegnante e migliore modello NAYER')
 parser.add_argument('--train_distilled_student', default=False, action=argparse.BooleanOptionalAction, help='Addestra uno studente distillato con BCE+KL; richiede --nayer_student')
 parser.add_argument('--alpha', default=0.2, type=float, help='Bilanciamento tra BCE loss (teacher) e KL loss (nayer student) per KD_student; richiede --train_distilled_student')
@@ -213,15 +213,15 @@ def main():
         #Caricamento modelli pre-addestrati
         teacher = registry.get_model(args.teacher, num_classes=num_classes, pretrained=True).eval()
         teacher.load_state_dict(torch.load(f'./checkpoints/pretrained/{args.dataset}_{args.teacher}.pth', map_location='cpu')['state_dict'])
-                    # Stessa architettura di args.student => resnet18
+                    # Stessa architettura di args.student originale "NAYER"=> resnet18
         nayerStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval() #best_c10r34r18-tvL2-0.0005__l2-0.00001
         nayerStudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.nayer_student}.pth', map_location='cpu')['state_dict']) 
                     # Stessa architettura di args.student => resnet18
         scratchStudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval() #epoche di esecuzione != epoche train studente scratch 
         scratchStudent.load_state_dict(torch.load(f'./checkpoints/scratch/{args.dataset}_{args.student}_100ep.pth', map_location='cpu')['state_dict'])
                     # Stessa architettura di args.student => resnet18
-        #KDstudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
-        #KDstudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.KD_student}.pth', map_location='cpu')['state_dict'])
+        KDstudent = registry.get_model(args.student, num_classes=num_classes, pretrained=True).eval()
+        KDstudent.load_state_dict(torch.load(f'./checkpoints/datafree-{args.method}/cifar10-resnet34-resnet18--{args.KD_student}.pth', map_location='cpu')['state_dict'])
 
 
         if "PCA" in args.metrics:
@@ -236,16 +236,15 @@ def main():
             scratchStudent_img = model_PCA(scratchStudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location, output_path=f"./IMG/PCA/scratchStudent_PCA.png")
 
-           # kdStudent_img = model_PCA(KDstudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
-            #        dataset_root=dataset_location,
-            #        output_path=f"./PCA_img/{args.KD_student}_PCA.png")
+            KDstudent_img = model_PCA(KDstudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
+                    dataset_root=dataset_location, output_path=f"./IMG/PCA/KDstudent_PCA.png")
 
             args.logger.info({"PCA - Elapsed Time": time.time() - start_time})
             wandb.log({
                 "PCA - Teacher": wandb.Image(teacher_img),
                 "PCA - NAYER Student": wandb.Image(nayerStudent_img),
                 "PCA - Scratch Student": wandb.Image(scratchStudent_img),
-              #  "PCA - KD Student": wandb.Image(kdStudent_img)
+                "PCA - KD Student": wandb.Image(KDstudent_img)
             })
 
 
@@ -254,14 +253,14 @@ def main():
             plot_decision_boundary(teacher, dataset_location, output_path="./IMG/PCA/teacher_decision_boundary.png")
             plot_decision_boundary(nayerStudent, dataset_location, output_path="./IMG/PCA/nayerStudent_decision_boundary.png")
             plot_decision_boundary(scratchStudent, dataset_location, output_path="./IMG/PCA/scratchStudent_decision_boundary.png")
-            #kdStudent_boundary = plot_decision_boundary(KDstudent, dataset_location, output_path="./IMG/PCA/kdStudent_decision_boundary.png")
+            plot_decision_boundary(KDstudent, dataset_location, output_path="./IMG/PCA/KDstudent_decision_boundary.png")
 
             args.logger.info({"Decision Boundary - Elapsed Time": time.time() - start_time})
             wandb.log({
                 "Decision Boundary - Teacher": wandb.Image("./IMG/PCA/teacher_decision_boundary.png"),
                 "Decision Boundary - NAYER Student": wandb.Image("./IMG/PCA/nayerStudent_decision_boundary.png"),
                 "Decision Boundary - Scratch Student": wandb.Image("./IMG/PCA/scratchStudent_decision_boundary.png"),
-                #"Decision Boundary - KD Student": wandb.Image("./IMG/PCA/kdStudent_decision_boundary.png")
+                "Decision Boundary - KD Student": wandb.Image("./IMG/PCA/KDstudent_decision_boundary.png")
             })
 
 
@@ -276,15 +275,15 @@ def main():
             compute_TSNE(scratchStudent, dataset_root=dataset_location, batch_size=args.batch_size,
                                             num_workers=args.workers, output_path="./IMG/TSNE/scratch_stud_TSNE.png" )
 
-            #kdStudent_img = compute_TSNE(KDstudent, dataset_root=dataset_location, batch_size=args.batch_size,
-            #                        num_workers=args.workers, output_path="./IMG/TSNE/kdStudent_TSNE.png" )
+            compute_TSNE(KDstudent, dataset_root=dataset_location, batch_size=args.batch_size,
+                                    num_workers=args.workers, output_path="./IMG/TSNE/KDstudent_TSNE.png" )
 
             args.logger.info({"TSNE - Elapsed Time": time.time() - start_time})
             wandb.log({
                 "TSNE - Teacher": wandb.Image("./IMG/TSNE/teacher_TSNE.png"),
                 "TSNE - NAYER Student": wandb.Image("./IMG/TSNE/nayerStudent_TSNE.png"),
                 "TSNE - Scratch Student": wandb.Image("./IMG/TSNE/scratch_stud_TSNE.png"),
-                #"TSNE - KD Student": wandb.Image("./IMG/TSNE/kdStudent_TSNE.png")
+                "TSNE - KD Student": wandb.Image("./IMG/TSNE/KDstudent_TSNE.png")
             })
 
 
@@ -296,15 +295,15 @@ def main():
                             output_path='./IMG/confusion/nayerStudent_confusion_matrix.png')
             compute_confusion_matrix(scratchStudent, dataset_location, batch_size=args.batch_size,
                             output_path='./IMG/confusion/scratchStudent_confusion_matrix.png')
-            #compute_confusion_matrix(KDstudent, dataset_location, batch_size=args.batch_size,
-            #                output_path='./Confusion_IMG/KDstudent_confusion_matrix.png')
+            compute_confusion_matrix(KDstudent, dataset_location, batch_size=args.batch_size,
+                            output_path='./IMG/confusion/KDstudent_confusion_matrix.png')
 
             args.logger.info({"Confusion Matrix - Elapsed Time": time.time() - start_time})
             wandb.log({
                 'Confusion Matrix - Teacher': wandb.Image('./IMG/confusion/teacher_confusion_matrix.png'),
                 'Confusion Matrix - NAYER Student ': wandb.Image('./IMG/confusion/nayerStudent_confusion_matrix.png'),
                 'Confusion Matrix - Scratch Student': wandb.Image('./IMG/confusion/scratchStudent_confusion_matrix.png'),
-                #'Confusion Matrix - KD Student': wandb.Image('./IMG/confusion/KDstudent_confusion_matrix.png')
+                'Confusion Matrix - KD Student': wandb.Image('./IMG/confusion/KDstudent_confusion_matrix.png')
             })
 
 
@@ -312,23 +311,25 @@ def main():
         # MODULO  Comparator
         ############################################
         teacher_nayerStud_Comparator = Comparator(teacher, nayerStudent, dataset_location, args.batch_size, args.workers)
-        #kdStud_nayerStud_Comparator = Comparator(KDstudent, nayerStudent, dataset_location, args.batch_size, args.workers)
+        KDstud_nayerStud_Comparator = Comparator(KDstudent, nayerStudent, dataset_location, args.batch_size, args.workers)
         scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
+        KDstud_scratchStud_Comparator = Comparator(KDstudent, scratchStudent, dataset_location, args.batch_size, args.workers)
 
         if "distance" in args.metrics: 
             start_time = time.time()
             teacher_nayerStud_dst = teacher_nayerStud_Comparator.prediction_distance()
             scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance()
-            #kdStudent_nayerStudent_dst = kdStud_nayerStud_Comparator.prediction_distance()
-            #kdStudent_scratchStudent_dst = kdStud_nayerStud_Comparator.prediction_distance()
+            KDstud_nayerStudent_dst = KDstud_nayerStud_Comparator.prediction_distance()
+            KDstud_scratchStudent_dst = KDstud_scratchStud_Comparator.prediction_distance()
 
             args.logger.info(f"Prediction Distance - Elapsed Time: {time.time() - start_time}")
             wandb.log({ 
                 'Prediction Distance (per class)': wandb.Image(sideBy_barplot(f"./IMG/distance/{args.log_tag}.png",
-                                                                                teacher_nayerStud_dst.values(), scratchStudent_nayerStudent_dst.values(),
+                                                                                teacher_nayerStud_dst.values(), scratchStudent_nayerStudent_dst.values(), 
+                                                                                KDstud_nayerStudent_dst.values(), KDstud_scratchStudent_dst.values(),
                                                                                 xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_dst.keys()),
                                                                                 title="Prediction Distance (Frobenius Norm) per class", 
-                                                                                labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent"]
+                                                                                labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                             )) 
             })
 
@@ -337,15 +338,17 @@ def main():
             start_time = time.time()
             DICE_teacher_nayerS = teacher_nayerStud_Comparator.dice_coefficient()
             DICE_scratch_nayerS = scratchStud_nayerStud_Comparator.dice_coefficient()
-            #kdStud_nayerStud_Comparator.dice_coefficient(save_path="./IMG/DICE/kdStud_nayerStud_DICE.png")
+            DICE_KDstud_nayerS = KDstud_nayerStud_Comparator.dice_coefficient()
+            DICE_KDstud_scratchS = KDstud_scratchStud_Comparator.dice_coefficient()
 
             args.logger.info(f"DICE score - Elapsed Time: {time.time() - start_time}")
             wandb.log({
                 'DICE score (per class)': wandb.Image(sideBy_barplot( f"./IMG/DICE/{args.log_tag}.png", 
                                                                         DICE_teacher_nayerS.values(), DICE_scratch_nayerS.values(), 
+                                                                        DICE_KDstud_nayerS.values(), DICE_KDstud_scratchS.values(),
                                                                         xlabel="Classe", ylabel="Score", xticks=list(DICE_scratch_nayerS.keys()),
                                                                         title="DICE Score (per class)", 
-                                                                        labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent"]
+                                                                        labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                     ))
             })
 
@@ -353,16 +356,17 @@ def main():
         if "JSindex" in args.metrics:
             start_time = time.time()
             teacher_nayerStud_JS = teacher_nayerStud_Comparator.jensen_Shannon_index()
-            #kdStud_nayerStud_JS = kdStud_nayerStud_Comparator.jensen_Shannon_index()
             scratchStud_nayerStud_JS = scratchStud_nayerStud_Comparator.jensen_Shannon_index()
+            KDstud_nayerStud_JS = KDstud_nayerStud_Comparator.jensen_Shannon_index()
+            KDstud_scratchStud_JS = KDstud_scratchStud_Comparator.jensen_Shannon_index()
 
             args.logger.info(f"Jensen-Shannon Index - Elapsed Time: {time.time() - start_time}")
             wandb.log({
                 'Jensen-Shannon Index (per class)': wandb.Image(sideBy_barplot( f"./IMG/JS/{args.log_tag}.png", 
                                                                         teacher_nayerStud_JS.values(), scratchStud_nayerStud_JS.values(), 
-                                                                        xlabel="Classe", ylabel="JS Index", xticks=list(scratchStud_nayerStud_JS.keys()),
+                                                                        KDstud_nayerStud_JS.values(), KDstud_scratchStud_JS.values(), xlabel="Classe", ylabel="JS Index", xticks=list(scratchStud_nayerStud_JS.keys()),
                                                                         title="Jensen-Shannon Index (per class)", 
-                                                                        labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent"]
+                                                                        labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                 ))
             })
             

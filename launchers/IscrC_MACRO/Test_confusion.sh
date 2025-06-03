@@ -16,5 +16,5 @@ python3 datafree_kd.py --workers 4 --gpu 0 --batch_size 512 --synthesis_batch_si
  --contr 0 --log_tag Test_confusion --tv_l2 0  --l2 0 --seed 32 \
  --nayer_student best_c10r34r18-tvL2-0.0005__l2-0.00001 \
  --scratch_student cifar10_resnet18_100ep \
- --KD_student KD_student_best_c10r34r18-tvL2-0.0005__l2-0.00001 \
+ --KD_student KD_student_alpha02 \
  --metrics confusionMatrix 
