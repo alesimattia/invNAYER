@@ -37,7 +37,7 @@ parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient fo
 # Metriche
 parser.add_argument('--metrics', nargs='+', help='Lista delle metriche da calcolare: PCA, TSNE, distance, DICE, confusionMatrix, JSindex', 
                     default=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"], 
-                    choices=[None, "PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"])
+                    choices=["Off", "PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"])
 # Modelli preaddestrati
 parser.add_argument('--nayer_student', type=str, default="best_c10r34r18-tvL2-0.0005__l2-0.00001", 
                     help='Path modello .pth preaddestrato con NAYER classico; per fare poi train di KD_student')
@@ -503,7 +503,7 @@ def main_worker(gpu, ngpus_per_node, args):
         Salta la sintetizzazione di immagini nel caso in cui 
         si vogliano calcolare solo le metriche
     '''
-    if args.metrics is not None: 
+    if args.metrics is not "Off": 
         return teacher, student
     
     criterion = datafree.criterions.KLDiv(T=args.T)
