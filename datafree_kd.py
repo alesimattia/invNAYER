@@ -610,13 +610,11 @@ def main_worker(gpu, ngpus_per_node, args):
     # Train Loop
     ############################################
     if args.train_distilled_student:
-        print("DEBUG: args.train_distilled_student (riga 613)")
         '''
             Da:  train_scratch.py
             Genera un train_loader o dataLoader per lo studente da distillare
             Elimina la necessità di un generatore come da workflow NAYER base.
         '''
-        device = args.gpu if args.gpu is not None else 'cpu'
         num_classes, train_dataset, val_dataset = registry.get_dataset(name=args.dataset, data_root=args.data_root)
         cudnn.benchmark = True
         if args.distributed:
@@ -767,7 +765,6 @@ def train_distilled_student(train_loader, teacher, distilledStudent, optimizer, 
     """
         Addestra un "distilledStudent" combinando hard labels (dal dataset) e soft labels (dal teacher)
     """
-    print(f"DEBUG: inside train_distilled_student()")
     global best_acc1
     loss_metric = datafree.metrics.RunningLoss(datafree.criterions.KLDiv(T=args.T, reduction='sum'))
     acc_metric = datafree.metrics.TopkAccuracy(topk=(1, 5))
