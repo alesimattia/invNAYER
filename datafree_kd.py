@@ -192,7 +192,7 @@ def main():
         mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
     else:
         # Simply call main_worker function
-        teacher, student, synthesizer, evaluator = main_worker(args.gpu, ngpus_per_node, args)
+        main_worker(args.gpu, ngpus_per_node, args)
         
         '''
         Eseguito al termine delle epoche di addestramento => cartella popolata con immagini sintetizzate
