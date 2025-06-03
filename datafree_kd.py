@@ -803,9 +803,11 @@ def train_distilled_student(train_loader, teacher, distilledStudent, optimizer, 
             loss = args.alpha * loss_kl + (1 - args.alpha) * loss_ce
             args.logger.info(f"CE Loss:{loss_ce}, KL Loss:{loss_kl}, Combined Loss:{loss}")
 
+        student_probs = F.log_softmax(student_logits/args.T, dim=1)
+        teacher_probs = F.softmax(teacher_logits/args.T, dim=1)
         # Metriche
         acc_metric.update(student_logits, targets)
-        loss_metric.update(student_logits, targets)
+        loss_metric.update(student_probs, teacher_probs)
 
         # Backward e optimize
         if args.fp16:

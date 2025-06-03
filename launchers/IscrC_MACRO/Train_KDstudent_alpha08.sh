@@ -14,6 +14,4 @@ python3 datafree_kd.py --workers 4 --gpu 0 --batch_size 512 --synthesis_batch_si
  --epochs 120 --dataset cifar10 --method nayer --lr_g 4e-3 --teacher resnet34 --student resnet18 \
  --save_dir run/ --adv 1.33 --bn 10.0 --oh 0.5 --g_steps 30 --g_life 10 --g_loops 2 --gwp_loops 10 \
  --contr 0 --log_tag KD_student_alpha08 --seed 32 --tv_l2 0.0005 \
- --train_distilled_student  --alpha 0.8 \
- --nayer_student ./checkpoints/datafree-nayer/cifar10-resnet34-resnet18--best_c10r34r18-tvL2-0.0005__l2-0.00001.pth \
- --scratch_student ./checkpoints/scratch/cifar10_resnet18_100ep.pth
+ --train_distilled_student  --alpha 0.8 --metrics "Off"
