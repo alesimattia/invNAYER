@@ -44,26 +44,33 @@ class Comparator:
             -Frob (bool): Se True, calcola la NORMA MATRICIALE (Frobenius) tra le predizioni dei modelli.
         Returns: 
             Dizionario {classe: distanza_media}
-            Se save_path è valorizzato, esporta il grafico .PNG delle distanze per ogni classe.
         """
+        from sklearn.metrics.pairwise import cosine_similarity
 
         class_distances = {i: [] for i in range(self.num_classes)}
         
         with torch.no_grad():
             for images, targets in self.test_loader:
                 images = images.to(self.device)
-                model1_prob = torch.softmax(self.model1(images), dim=1)
-                model2_prob = torch.softmax(self.model2(images), dim=1)
-        
+                model1_prob = torch.softmax(self.model1(images), dim=1).cpu().numpy()
+                model2_prob = torch.softmax(self.model2(images), dim=1).cpu().numpy()
+
                 if frob:
-                    distances = torch.norm(model1_prob - model2_prob, dim=1).cpu().numpy()
+                    # Norma Frobenius tra le predizioni
+                    distances = np.linalg.norm(model1_prob - model2_prob, axis=1)
                 else:
-                    distances = (model1_prob - model2_prob).mean(dim=1).cpu().numpy()
-                # Raggruppa le distanze per classe
+                    # Per ogni coppia di predizioni
+                    similarities = np.array([
+                        cosine_similarity(model1_prob[i].reshape(1, -1), model2_prob[i].reshape(1, -1))[0, 0]
+                        for i in range(model1_prob.shape[0])
+                    ])
+                    distances = similarities  # In questo caso, "distanza" = similarità (valori tra -1 e 1)
+
+                # Raggruppa le distanze/similarità per classe
                 for i, target in enumerate(targets.numpy()):
                     class_distances[target].append(distances[i])
 
-        # Distanza MEDIA per ogni classe
+        # Media per ogni classe
         mean_distances = {class_idx: np.mean(class_distances[class_idx]) for class_idx in class_distances}
 
         return mean_distances
