@@ -227,16 +227,16 @@ def main():
         if "PCA" in args.metrics:
             components = 2
             start_time = time.time()
-            teacher_img = model_PCA(teacher, components=components, batch_size=args.batch_size, num_workers=args.workers,
+            teacher_img = model_PCA(teacher, components=components, print_tag="Teacher", batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location, output_path=f"./IMG/PCA/teacher_PCA.png")
 
-            nayerStudent_img = model_PCA(nayerStudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
+            nayerStudent_img = model_PCA(nayerStudent, components=components, print_tag="NayerStudent", batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location, output_path=f"./IMG/PCA/{args.nayer_student}_PCA.png")
 
-            scratchStudent_img = model_PCA(scratchStudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
+            scratchStudent_img = model_PCA(scratchStudent, components=components, print_tag="ScratchStudent", batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location, output_path=f"./IMG/PCA/scratchStudent_PCA.png")
 
-            KDstudent_img = model_PCA(KDstudent, components=components, batch_size=args.batch_size, num_workers=args.workers,
+            KDstudent_img = model_PCA(KDstudent, components=components, print_tag="KDstudent", batch_size=args.batch_size, num_workers=args.workers,
                     dataset_root=dataset_location, output_path=f"./IMG/PCA/KDstudent_PCA.png")
 
             args.logger.info({"PCA - Elapsed Time": time.time() - start_time})
@@ -266,16 +266,16 @@ def main():
 
         if "TSNE" in args.metrics:
             start_time = time.time()
-            compute_TSNE(teacher, dataset_root=dataset_location, batch_size=args.batch_size,
+            compute_TSNE(teacher, dataset_root=dataset_location, print_tag="Teacher", batch_size=args.batch_size,
                                     num_workers=args.workers, output_path="./IMG/TSNE/teacher_TSNE.png" )
 
-            compute_TSNE(nayerStudent, dataset_root=dataset_location, batch_size=args.batch_size,
+            compute_TSNE(nayerStudent, dataset_root=dataset_location, print_tag="NayerStudent", batch_size=args.batch_size,
                                     num_workers=args.workers, output_path="./IMG/TSNE/nayerStudent_TSNE.png" )
 
-            compute_TSNE(scratchStudent, dataset_root=dataset_location, batch_size=args.batch_size,
+            compute_TSNE(scratchStudent, dataset_root=dataset_location, print_tag="ScratchStudent", batch_size=args.batch_size,
                                             num_workers=args.workers, output_path="./IMG/TSNE/scratch_stud_TSNE.png" )
 
-            compute_TSNE(KDstudent, dataset_root=dataset_location, batch_size=args.batch_size,
+            compute_TSNE(KDstudent, dataset_root=dataset_location, print_tag="KDstudent", batch_size=args.batch_size,
                                     num_workers=args.workers, output_path="./IMG/TSNE/KDstudent_TSNE.png" )
 
             args.logger.info({"TSNE - Elapsed Time": time.time() - start_time})
@@ -327,8 +327,8 @@ def main():
                 'Prediction Distance (per class)': wandb.Image(sideBy_barplot(f"./IMG/distance/{args.log_tag}.png",
                                                                                 teacher_nayerStud_dst.values(), scratchStudent_nayerStudent_dst.values(), 
                                                                                 KDstud_nayerStudent_dst.values(), KDstud_scratchStudent_dst.values(),
-                                                                                xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_dst.keys()),
-                                                                                title="Prediction Distance (Frobenius Norm) per class", 
+                                                                                xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
+                                                                                title="Prediction Distance (per class)", 
                                                                                 labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                             )) 
             })
@@ -346,7 +346,7 @@ def main():
                 'DICE score (per class)': wandb.Image(sideBy_barplot( f"./IMG/DICE/{args.log_tag}.png", 
                                                                         DICE_teacher_nayerS.values(), DICE_scratch_nayerS.values(), 
                                                                         DICE_KDstud_nayerS.values(), DICE_KDstud_scratchS.values(),
-                                                                        xlabel="Classe", ylabel="Score", xticks=list(DICE_scratch_nayerS.keys()),
+                                                                        xlabel="Classe", ylabel="Score", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
                                                                         title="DICE Score (per class)", 
                                                                         labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                     ))
@@ -364,7 +364,7 @@ def main():
             wandb.log({
                 'Jensen-Shannon Index (per class)': wandb.Image(sideBy_barplot( f"./IMG/JS/{args.log_tag}.png", 
                                                                         teacher_nayerStud_JS.values(), scratchStud_nayerStud_JS.values(), 
-                                                                        KDstud_nayerStud_JS.values(), KDstud_scratchStud_JS.values(), xlabel="Classe", ylabel="JS Index", xticks=list(scratchStud_nayerStud_JS.keys()),
+                                                                        KDstud_nayerStud_JS.values(), KDstud_scratchStud_JS.values(), xlabel="Classe", ylabel="JS Index", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
                                                                         title="Jensen-Shannon Index (per class)", 
                                                                         labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                 ))
@@ -729,11 +729,6 @@ def train(synthesizer, model, criterion, optimizer, args, dataLoader = None):
                 t_out, t_feat = teacher(images, return_features=True)
             s_out = student(images.detach())
             loss_s = criterion(s_out, t_out.detach())
-
-            #distillazione "classica" con addestramento studente con gli stessi dati dell'insegnante
-            #new_criterion = nn.CrossEntropyLoss().cuda(args.gpu)
-            #loss_crossE = new_criterion(s_out, target)
-            #main_loss = "alpha"*loss_crossE + "1-alpha"*loss_s => magari sovrascrivere ni modo da non modificare tutto il resto
             
         optimizer.zero_grad()
         if args.fp16:
@@ -764,7 +759,7 @@ def train(synthesizer, model, criterion, optimizer, args, dataLoader = None):
             loss_metric.reset(), acc_metric.reset()
 
 
-                           # ↓ da train_scratch.py. Equivale a dataLoader
+                           # ↓ da train_scratch.py. Equivale a 'dataLoader'
 def train_distilled_student(train_loader, teacher, distilledStudent, optimizer, args):
     """
         Addestra un "distilledStudent" combinando hard labels (dal dataset) e soft labels (dal teacher)

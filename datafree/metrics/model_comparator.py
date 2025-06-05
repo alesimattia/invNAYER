@@ -36,12 +36,12 @@ class Comparator:
         
 
 
-    def prediction_distance(self):
+    def prediction_distance(self, frob=False):
         """
-        Calcola la NORMA MATRICIALE (Frobenius) tra le predizioni di due modelli, per ogni classe.
+        Calcola la distanza tra le predizioni di due modelli, per ogni classe.
         
         Args:
-            ---
+            -Frob (bool): Se True, calcola la NORMA MATRICIALE (Frobenius) tra le predizioni dei modelli.
         Returns: 
             Dizionario {classe: distanza_media}
             Se save_path è valorizzato, esporta il grafico .PNG delle distanze per ogni classe.
@@ -54,7 +54,11 @@ class Comparator:
                 images = images.to(self.device)
                 model1_prob = torch.softmax(self.model1(images), dim=1)
                 model2_prob = torch.softmax(self.model2(images), dim=1)
-                distances = torch.norm(model1_prob - model2_prob, dim=1).cpu().numpy()
+        
+                if frob:
+                    distances = torch.norm(model1_prob - model2_prob, dim=1).cpu().numpy()
+                else:
+                    distances = (model1_prob - model2_prob).mean(dim=1).cpu().numpy()
                 # Raggruppa le distanze per classe
                 for i, target in enumerate(targets.numpy()):
                     class_distances[target].append(distances[i])

@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 
-def model_PCA(model, components=3, dataset_root='../CIFAR10', output_path=None, batch_size=512, num_workers=4):
+def model_PCA(model, components=3, print_tag="model", dataset_root='../CIFAR10', output_path=None, batch_size=512, num_workers=4):
     """
     Estrae le 3 caratteristiche principali del modello mediante PCA e le 
     visualizza in uno spazio 3D
@@ -58,17 +58,18 @@ def model_PCA(model, components=3, dataset_root='../CIFAR10', output_path=None, 
         for class_idx in range(len(dataset.classes)):
             class_points = features_pca[labels == class_idx]
             ax.scatter(class_points[:, 0], class_points[:, 1], label=f'Class {class_idx}', alpha=0.7, s=20, c=[colors(class_idx)])
-        ax.set_xlabel("PCA1")
-        ax.set_ylabel("PCA2")
+        ax.set_xlabel("Component 1")
+        ax.set_ylabel("Component 2")
     else:
         fig = plt.figure(figsize=(10, 8))
         ax = fig.add_subplot(111, projection='3d')
         for class_idx in range(len(dataset.classes)):
             class_points = features_pca[labels == class_idx]
-            ax.scatter(class_points[:, 0], class_points[:, 1], class_points[:, 2], label=f'Class {class_idx}', alpha=0.7, s=20, c=[colors(class_idx)])
-        ax.set_xlabel("PCA1")
-        ax.set_ylabel("PCA2")
-        ax.set_zlabel("PCA3")
+            ax.scatter(class_points[:, 0], class_points[:, 1], class_points[:, 2], label=dataset.classes[class_idx], alpha=0.7, s=20, c=[colors(class_idx)])
+        ax.set_title(f"PCA {components}D - {print_tag}")
+        ax.set_xlabel("Component 1")
+        ax.set_ylabel("Component 2")
+        ax.set_zlabel("Component 3")
     ax.legend()
 
 

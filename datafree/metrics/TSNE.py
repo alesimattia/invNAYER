@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 
-def compute_TSNE(model, dataset_root, batch_size=512, num_workers=4, output_path="./tsne.png"):
+def compute_TSNE(model, dataset_root, print_tag="model", batch_size=512, num_workers=4, output_path="./tsne.png"):
     
     """
     Applica t-SNE alle predizioni del modello specificato.
@@ -19,8 +19,8 @@ def compute_TSNE(model, dataset_root, batch_size=512, num_workers=4, output_path
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
     ])
-    cifar_test = datasets.CIFAR10(root=dataset_root, train=False, download=True, transform=transform)
-    test_loader = torch.utils.data.DataLoader(cifar_test, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    dataset = datasets.CIFAR10(root=dataset_root, train=False, download=True, transform=transform)
+    test_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
     features = []
     labels = []
@@ -43,9 +43,9 @@ def compute_TSNE(model, dataset_root, batch_size=512, num_workers=4, output_path
     colors = plt.cm.get_cmap("tab10", 10)
     for class_idx in range(10):
         idxs = labels == class_idx
-        ax.scatter(features_tsne[idxs, 0], features_tsne[idxs, 1], label=f'Class {class_idx}', alpha=0.7, s=20, c=[colors(class_idx)])
+        ax.scatter(features_tsne[idxs, 0], features_tsne[idxs, 1], label=dataset.classes[class_idx], alpha=0.7, s=20, c=[colors(class_idx)])
     ax.legend()
-    ax.set_title(f"t-SNE predizioni del modello {model.__class__.__name__}")
+    ax.set_title(f"t-SNE predizioni - {print_tag}")
     ax.set_xlabel("Component 1")
     ax.set_ylabel("Component 2")
     plt.tight_layout()
