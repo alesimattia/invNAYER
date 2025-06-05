@@ -34,9 +34,10 @@ def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel=
     for i, data in enumerate(data_lists):
         offset = width * i - (width * (n_lists-1))/2
         bars = ax.bar(x + offset, data, width, label=labels[i], color=colors[i])
-
-        # Aggiunge valori sopra le barre (ora corretti)
+        print(f"Data for {labels[i]}: {data}") #DEBUG
+        # Aggiunge valori sopra le barre
         for bar, val in zip(bars, data):
+            print(f"Bar value: {val}") #DEBUG
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
                    f'{val:.2f}', ha='center', va='bottom')
