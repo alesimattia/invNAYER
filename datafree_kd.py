@@ -24,8 +24,7 @@ from datafree.metrics.model_comparator import Comparator
 from datafree.metrics.confusionMatrix import compute_confusion_matrix
 from datafree.utils.data_visualizer import sideBy_barplot
 from codecarbon import EmissionsTracker
-tracker = EmissionsTracker(project_name="invNAYER")
-tracker.start()
+
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
 
@@ -50,7 +49,7 @@ parser.add_argument('--KD_student', type=str, default='KD_student_alpha02',
                     help='Path modello .pth che combini predizioni insegnante e migliore modello NAYER')
 parser.add_argument('--train_distilled_student', default=False, action=argparse.BooleanOptionalAction, help='Addestra uno studente distillato con BCE+KL; richiede --nayer_student')
 parser.add_argument('--alpha', default=0.2, type=float, help='Bilanciamento tra BCE loss (teacher) e KL loss (nayer student) per KD_student; richiede --train_distilled_student')
-
+parser.add_argument('--footprint', default=False, action=argparse.BooleanOptionalAction, help='Addestra uno studente distillato con BCE+KL; richiede --nayer_student')
 
 # Data Free
 parser.add_argument('--method', default='nldf')
@@ -164,6 +163,10 @@ time_cost = 0
 
 def main():
     args = parser.parse_args()
+    if args.footprint:
+        tracker = EmissionsTracker(project_name="invNAYER")
+        tracker.start()
+        import pandas as pd
 
     args.save_dir = args.save_dir + args.log_tag
     if args.seed is not None:
@@ -383,13 +386,14 @@ def main():
             })
             
       
-        ''' NETWORK CALL NON FUNZIONANTI SU CINECA''' 
-        # Sincronizza automaticamente i risultati su wandb 
-        #result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
-        #print(result.stdout)
+    ''' NETWORK CALL NON FUNZIONANTI SU CINECA''' 
+    # Sincronizza automaticamente i risultati su wandb 
+    #result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
+    #print(result.stdout)
+    if args.footprint:
         emissions: float = tracker.stop()
-        print(f"CodeCarbon emissioni stimate: {emissions:.6f} kgCO2eq")
-        wandb.log({"Emissioni di carbonio in KG": emissions})
+        print(f"Grammi di carbonio prodotti: {emissions:.6f} kgCO2eq")
+        wandb.log({'Codecarbon Log': wandb.Table(dataframe=pd.read_csv("./emissions.csv"))})
 
 
 def main_worker(gpu, ngpus_per_node, args):
