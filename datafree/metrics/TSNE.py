@@ -44,7 +44,7 @@ def compute_TSNE(model, dataset_root, print_tag="model", batch_size=512, num_wor
     for class_idx in range(10):
         idxs = labels == class_idx
         ax.scatter(features_tsne[idxs, 0], features_tsne[idxs, 1], label=dataset.classes[class_idx], alpha=0.7, s=20, c=[colors(class_idx)])
-    ax.legend()
+    ax.legend(title="Classes", loc="best")
     ax.set_title(f"t-SNE predizioni - {print_tag}")
     ax.set_xlabel("Component 1")
     ax.set_ylabel("Component 2")

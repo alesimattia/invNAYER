@@ -70,7 +70,7 @@ def model_PCA(model, components=3, print_tag="model", dataset_root='../CIFAR10',
         ax.set_xlabel("Component 1")
         ax.set_ylabel("Component 2")
         ax.set_zlabel("Component 3")
-    ax.legend()
+    ax.legend(list(dataset.classes), loc="best", title="Classes")
 
 
     if output_path is not None:
@@ -109,7 +109,6 @@ def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num
 
 
     num_classes = len(np.unique(labels))
-    print(f"Numero di classi uniche trovate: {num_classes}")  # debug
     
     # Crea una colormap con esattamente 10 colori
     colors = plt.cm.tab10(np.linspace(0, 1, num_classes))
@@ -123,7 +122,7 @@ def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num
     ax.set_xlabel("PCA 1")
     ax.set_ylabel("PCA 2")
     ax.set_title(f"Decision Boundary - {model.__class__.__name__}")
-    ax.legend(*scatter.legend_elements(), title="Classi")
+    ax.legend(labels, loc="best", title="Classes")
 
     if output_path:
         plt.savefig(output_path)
