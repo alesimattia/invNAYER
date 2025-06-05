@@ -78,7 +78,7 @@ def model_PCA(model, components=3, print_tag="model", dataset_root='../CIFAR10',
         print(f"PCA {components}D plot salvato in: {output_path}")
         plt.close(fig)
         return fig
-    return features_pca, labels, pca
+    return features_pca, labels, pca, dataset.classes
 
 
 
@@ -89,7 +89,7 @@ def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num
     """
     from matplotlib.colors import ListedColormap
 
-    features_pca, labels, pca = model_PCA( model, components=2, dataset_root=dataset_root,
+    features_pca, labels, pca, class_names = model_PCA( model, components=2, dataset_root=dataset_root,
                                         batch_size=batch_size, num_workers=num_workers)
 
 
@@ -122,7 +122,7 @@ def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num
     ax.set_xlabel("PCA 1")
     ax.set_ylabel("PCA 2")
     ax.set_title(f"Decision Boundary - {model.__class__.__name__}")
-    ax.legend(labels, loc="best", title="Classes")
+    ax.legend(class_names, loc="best", title="Classes")
 
     if output_path:
         plt.savefig(output_path)

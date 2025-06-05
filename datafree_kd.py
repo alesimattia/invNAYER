@@ -23,7 +23,7 @@ from datafree.metrics.TSNE import compute_TSNE
 from datafree.metrics.model_comparator import Comparator
 from datafree.metrics.confusionMatrix import compute_confusion_matrix
 from datafree.utils.data_visualizer import sideBy_barplot
-from codecarbon import EmissionsTracker
+from codecarbon import OfflineEmissionsTracker
 
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
@@ -164,7 +164,8 @@ time_cost = 0
 def main():
     args = parser.parse_args()
     if args.footprint:
-        tracker = EmissionsTracker(project_name="invNAYER")
+        os.remove("./emissions.csv") #delete old log
+        tracker = OfflineEmissionsTracker(country_iso_code="ITA", project_name="invNAYER")
         tracker.start()
         import pandas as pd
 
@@ -392,7 +393,7 @@ def main():
     #print(result.stdout)
     if args.footprint:
         emissions: float = tracker.stop()
-        print(f"Grammi di carbonio prodotti: {emissions:.6f} kgCO2eq")
+        print(f"Grammi di carbonio prodotti: {emissions:.6f/1000} kgCO2eq")
         wandb.log({'Codecarbon Log': wandb.Table(dataframe=pd.read_csv("./emissions.csv"))})
 
 

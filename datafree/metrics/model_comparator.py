@@ -111,7 +111,6 @@ class Comparator:
             dice = (2. * intersection) / (len(pred1) + len(pred2) + 1e-8)
             dice_scores[currentClass] = dice # DICE score è sempre tra 0 e 1
 
-        print(f"DICE scores: {dice_scores}") #debug
         return dice_scores
 
 
@@ -141,5 +140,4 @@ class Comparator:
             for class_idx, distances in class_js_distances.items()
         }
 
-        print(f"Jensen-Shannon Index per classe: {js_means}") #debug
         return js_means
