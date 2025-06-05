@@ -317,10 +317,10 @@ def main():
 
         if "distance" in args.metrics: 
             start_time = time.time()
-            teacher_nayerStud_dst = teacher_nayerStud_Comparator.prediction_distance()
-            scratchStudent_nayerStudent_dst = scratchStud_nayerStud_Comparator.prediction_distance()
-            KDstud_nayerStudent_dst = KDstud_nayerStud_Comparator.prediction_distance()
-            KDstud_scratchStudent_dst = KDstud_scratchStud_Comparator.prediction_distance()
+            teacher_nayerStud_dst = 1-teacher_nayerStud_Comparator.prediction_distance()
+            scratchStudent_nayerStudent_dst = 1-scratchStud_nayerStud_Comparator.prediction_distance()
+            KDstud_nayerStudent_dst = 1-KDstud_nayerStud_Comparator.prediction_distance()
+            KDstud_scratchStudent_dst = 1-KDstud_scratchStud_Comparator.prediction_distance()
 
             args.logger.info(f"Prediction Distance - Elapsed Time: {time.time() - start_time}")
             wandb.log({ 
