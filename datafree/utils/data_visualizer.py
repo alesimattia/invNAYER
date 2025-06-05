@@ -37,7 +37,7 @@ def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel=
         for bar, val in zip(bars, data):
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{val:.2f}', ha='center', va='bottom')
+                    f'{val:.3f}', ha='center', va='bottom', rotation=45)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)

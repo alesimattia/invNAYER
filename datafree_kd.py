@@ -326,24 +326,24 @@ def main():
 
         if "distance" in args.metrics: 
             start_time = time.time()
-            teacher_nayerStud_dst = list(map(lambda x: 1-x, teacher_nayerStud_Comparator.prediction_distance().values()))
-            teacher_scratchStud_dst = list(map(lambda x: 1-x, teacher_scratchStud_Comparator.prediction_distance().values()))
-            teacher_KDstud_dst = list(map(lambda x: 1-x, teacher_KDstud_Comparator.prediction_distance().values()))
-            scratchStudent_nayerStudent_dst = list(map(lambda x: 1-x, scratchStud_nayerStud_Comparator.prediction_distance().values()))
-            KDstud_nayerStudent_dst = list(map(lambda x: 1-x, KDstud_nayerStud_Comparator.prediction_distance().values()))
-            KDstud_scratchStudent_dst = list(map(lambda x: 1-x, KDstud_scratchStud_Comparator.prediction_distance().values()))
+            teacher_nayerStud_dst = list(map(lambda x: (1-x)*100, teacher_nayerStud_Comparator.prediction_distance().values()))
+            teacher_scratchStud_dst = list(map(lambda x: (1-x)*100, teacher_scratchStud_Comparator.prediction_distance().values()))
+            teacher_KDstud_dst = list(map(lambda x: (1-x)*100, teacher_KDstud_Comparator.prediction_distance().values()))
+            scratchStudent_nayerStudent_dst = list(map(lambda x: (1-x)*100, scratchStud_nayerStud_Comparator.prediction_distance().values()))
+            KDstud_nayerStudent_dst = list(map(lambda x: (1-x)*100, KDstud_nayerStud_Comparator.prediction_distance().values()))
+            KDstud_scratchStudent_dst = list(map(lambda x: (1-x)*100, KDstud_scratchStud_Comparator.prediction_distance().values()))
 
             args.logger.info(f"Prediction Distance - Elapsed Time: {time.time() - start_time}")
             wandb.log({ 
                 'Prediction Distance vs. Teacher (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_teacher-students.png",
                                                                                 teacher_nayerStud_dst, teacher_scratchStud_dst, teacher_KDstud_dst,
-                                                                                xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
+                                                                                xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
                                                                                 title="Prediction Distance (per class)", 
                                                                                 labels=["Teacher/NayerStudent", "Teacher/ScratchStudent", "Teacher/KDstudent"]
                                                                             )),
                 'Prediction Distance - Students (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_all_students.png",
                                                                                 scratchStudent_nayerStudent_dst, KDstud_nayerStudent_dst, KDstud_scratchStudent_dst,
-                                                                                xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
+                                                                                xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
                                                                                 title="Prediction Distance - Students (per class)", 
                                                                                 labels=["ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                             ))
