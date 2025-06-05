@@ -317,16 +317,16 @@ def main():
 
         if "distance" in args.metrics: 
             start_time = time.time()
-            teacher_nayerStud_dst = 1-teacher_nayerStud_Comparator.prediction_distance()
-            scratchStudent_nayerStudent_dst = 1-scratchStud_nayerStud_Comparator.prediction_distance()
-            KDstud_nayerStudent_dst = 1-KDstud_nayerStud_Comparator.prediction_distance()
-            KDstud_scratchStudent_dst = 1-KDstud_scratchStud_Comparator.prediction_distance()
+            teacher_nayerStud_dst = list(map(lambda x: x - 1, teacher_nayerStud_Comparator.prediction_distance().values()))
+            scratchStudent_nayerStudent_dst = list(map(lambda x: x - 1, scratchStud_nayerStud_Comparator.prediction_distance().values()))
+            KDstud_nayerStudent_dst = list(map(lambda x: x - 1, KDstud_nayerStud_Comparator.prediction_distance().values()))
+            KDstud_scratchStudent_dst = list(map(lambda x: x - 1, KDstud_scratchStud_Comparator.prediction_distance().values()))
 
             args.logger.info(f"Prediction Distance - Elapsed Time: {time.time() - start_time}")
             wandb.log({ 
                 'Prediction Distance (per class)': wandb.Image(sideBy_barplot(f"./IMG/distance/{args.log_tag}.png",
-                                                                                teacher_nayerStud_dst.values(), scratchStudent_nayerStudent_dst.values(), 
-                                                                                KDstud_nayerStudent_dst.values(), KDstud_scratchStudent_dst.values(),
+                                                                                teacher_nayerStud_dst, scratchStudent_nayerStudent_dst, 
+                                                                                KDstud_nayerStudent_dst, KDstud_scratchStudent_dst,
                                                                                 xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
                                                                                 title="Prediction Distance (per class)", 
                                                                                 labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
