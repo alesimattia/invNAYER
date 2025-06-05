@@ -23,6 +23,9 @@ from datafree.metrics.TSNE import compute_TSNE
 from datafree.metrics.model_comparator import Comparator
 from datafree.metrics.confusionMatrix import compute_confusion_matrix
 from datafree.utils.data_visualizer import sideBy_barplot
+from codecarbon import EmissionsTracker
+tracker = EmissionsTracker(project_name="invNAYER")
+tracker.start()
 
 parser = argparse.ArgumentParser(description='Inversion loss NAYER')
 
@@ -332,7 +335,7 @@ def main():
                                                                                 teacher_nayerStud_dst, teacher_scratchStud_dst, teacher_KDstud_dst,
                                                                                 xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
                                                                                 title="Prediction Distance (per class)", 
-                                                                                labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
+                                                                                labels=["Teacher/NayerStudent", "Teacher/ScratchStudent", "Teacher/KDstudent"]
                                                                             )),
                 'Prediction Distance - Students (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_all_students.png",
                                                                                 scratchStudent_nayerStudent_dst, KDstud_nayerStudent_dst, KDstud_scratchStudent_dst,
@@ -384,7 +387,9 @@ def main():
         # Sincronizza automaticamente i risultati su wandb 
         #result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
         #print(result.stdout)
-
+        emissions: float = tracker.stop()
+        print(f"CodeCarbon emissioni stimate: {emissions:.6f} kgCO2eq")
+        wandb.log({"Emissioni di carbonio in KG": emissions})
 
 
 def main_worker(gpu, ngpus_per_node, args):

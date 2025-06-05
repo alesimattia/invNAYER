@@ -16,3 +16,4 @@ importlib_metadata
 xlsxwriter
 mpl-tools
 tsnecuda
+codecarbon
