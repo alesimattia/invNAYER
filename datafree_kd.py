@@ -311,26 +311,35 @@ def main():
         # MODULO  Comparator
         ############################################
         teacher_nayerStud_Comparator = Comparator(teacher, nayerStudent, dataset_location, args.batch_size, args.workers)
+        teacher_scratchStud_Comparator = Comparator(teacher, scratchStudent, dataset_location, args.batch_size, args.workers)
+        teacher_KDstud_Comparator = Comparator(teacher, KDstudent, dataset_location, args.batch_size, args.workers)
         KDstud_nayerStud_Comparator = Comparator(KDstudent, nayerStudent, dataset_location, args.batch_size, args.workers)
         scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
         KDstud_scratchStud_Comparator = Comparator(KDstudent, scratchStudent, dataset_location, args.batch_size, args.workers)
 
         if "distance" in args.metrics: 
             start_time = time.time()
-            teacher_nayerStud_dst = list(map(lambda x: x - 1, teacher_nayerStud_Comparator.prediction_distance().values()))
-            scratchStudent_nayerStudent_dst = list(map(lambda x: x - 1, scratchStud_nayerStud_Comparator.prediction_distance().values()))
-            KDstud_nayerStudent_dst = list(map(lambda x: x - 1, KDstud_nayerStud_Comparator.prediction_distance().values()))
-            KDstud_scratchStudent_dst = list(map(lambda x: x - 1, KDstud_scratchStud_Comparator.prediction_distance().values()))
+            teacher_nayerStud_dst = list(map(lambda x: 1-x, teacher_nayerStud_Comparator.prediction_distance().values()))
+            teacher_scratchStud_dst = list(map(lambda x: 1-x, teacher_scratchStud_Comparator.prediction_distance().values()))
+            teacher_KDstud_dst = list(map(lambda x: 1-x, teacher_KDstud_Comparator.prediction_distance().values()))
+            scratchStudent_nayerStudent_dst = list(map(lambda x: 1-x, scratchStud_nayerStud_Comparator.prediction_distance().values()))
+            KDstud_nayerStudent_dst = list(map(lambda x: 1-x, KDstud_nayerStud_Comparator.prediction_distance().values()))
+            KDstud_scratchStudent_dst = list(map(lambda x: 1-x, KDstud_scratchStud_Comparator.prediction_distance().values()))
 
             args.logger.info(f"Prediction Distance - Elapsed Time: {time.time() - start_time}")
             wandb.log({ 
-                'Prediction Distance (per class)': wandb.Image(sideBy_barplot(f"./IMG/distance/{args.log_tag}.png",
-                                                                                teacher_nayerStud_dst, scratchStudent_nayerStudent_dst, 
-                                                                                KDstud_nayerStudent_dst, KDstud_scratchStudent_dst,
+                'Prediction Distance vs. Teacher (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_teacher-students.png",
+                                                                                teacher_nayerStud_dst, teacher_scratchStud_dst, teacher_KDstud_dst,
                                                                                 xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
                                                                                 title="Prediction Distance (per class)", 
                                                                                 labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
-                                                                            )) 
+                                                                            )),
+                'Prediction Distance - Students (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_all_students.png",
+                                                                                scratchStudent_nayerStudent_dst, KDstud_nayerStudent_dst, KDstud_scratchStudent_dst,
+                                                                                xlabel="Classe", ylabel="Distanza Media", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
+                                                                                title="Prediction Distance - Students (per class)", 
+                                                                                labels=["ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
+                                                                            ))
             })
 
 
