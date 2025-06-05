@@ -392,8 +392,8 @@ def main():
     #result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
     #print(result.stdout)
     if args.footprint:
-        emissions: float = tracker.stop()
-        print(f"Grammi di carbonio prodotti: {emissions:.6f/1000} kgCO2eq")
+        emissions = float(tracker.stop()) / 1000
+        print(f"Grammi di carbonio prodotti: {emissions:.6f} kgCO2eq")
         wandb.log({'Codecarbon Log': wandb.Table(dataframe=pd.read_csv("./emissions.csv"))})
 
 
