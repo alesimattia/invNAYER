@@ -164,10 +164,12 @@ time_cost = 0
 def main():
     args = parser.parse_args()
     if args.footprint:
-        os.remove("./emissions.csv") #delete old log
-        tracker = OfflineEmissionsTracker(country_iso_code="ITA", project_name="invNAYER")
-        tracker.start()
-        import pandas as pd
+        try:
+            os.remove("./emissions.csv") #delete old log
+        finally:
+            tracker = OfflineEmissionsTracker(country_iso_code="ITA", project_name="invNAYER")
+            tracker.start()
+            import pandas as pd
 
     args.save_dir = args.save_dir + args.log_tag
     if args.seed is not None:
