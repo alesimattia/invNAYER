@@ -164,7 +164,8 @@ time_cost = 0
 def main():
     args = parser.parse_args()
     if args.footprint:
-        os.remove("./emissions.csv") if os.path.exists("./emissions.csv") else None #delete old log
+        if os.path.exists("./emissions.csv"):
+            os.remove("./emissions.csv")  #delete old log
         tracker = OfflineEmissionsTracker(country_iso_code="ITA", project_name="invNAYER")
         tracker.start()
         import pandas as pd
