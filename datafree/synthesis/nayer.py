@@ -127,10 +127,10 @@ class NAYER(BaseSynthesis):
 			self.coeff_l2 = coefficients["l2"]
 			self.main_loss_multiplier = coefficients["main_loss_multiplier"]
 			self.adi_scale = coefficients["adi_scale"]
-			
+
 			## Create hooks for feature statistics
 			self.loss_r_feature_layers = []
-			for module in self.net_teacher.modules():
+			for module in self.teacher.modules():
 				if isinstance(module, nn.BatchNorm2d):
 					self.loss_r_feature_layers.append(DeepInversionFeatureHook(module))
 		else:
