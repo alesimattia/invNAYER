@@ -78,7 +78,7 @@ def model_PCA(model, components=3, print_tag="model", dataset_root='../CIFAR10',
         print(f"PCA {components}D plot salvato in: {output_path}")
         plt.close(fig)
         return fig
-    return features_pca, labels, pca, dataset.classes
+    return features_pca, labels, pca, list(dataset.classes)
 
 
 

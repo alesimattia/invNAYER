@@ -395,7 +395,7 @@ def main():
         emissions: float = tracker.stop()
         emissions /= 1000
         print(f"Emissioni di carbonio: {emissions:.6f} gCO2eq")
-        wandb.log({'Codecarbon Log': wandb.Table(dataframe=pd.read_csv("./emissions.csv"))})
+        wandb.log({'Carbon emissions [gCO2eq]': emissions})
 
 
 def main_worker(gpu, ngpus_per_node, args):
