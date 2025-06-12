@@ -83,6 +83,31 @@ def get_image_prior_losses(inputs_jit):
 		return loss_var_l1, loss_var_l2
 
 
+class DeepInversionFeatureHook():
+    '''
+    Implementation of the forward hook to track feature statistics and compute a loss on them.
+    Will compute mean and variance, and will use l2 as a loss
+    '''
+    def __init__(self, module):
+        self.hook = module.register_forward_hook(self.hook_fn)
+
+    def hook_fn(self, module, input, output):
+        # hook co compute deepinversion's feature distribution regularization
+        nch = input[0].shape[1]
+        mean = input[0].mean([0, 2, 3])
+        var = input[0].permute(1, 0, 2, 3).contiguous().view([nch, -1]).var(1, unbiased=False)
+
+        #forcing mean and variance to match between two distributions
+        #other ways might work better, i.g. KL divergence
+        r_feature = torch.norm(module.running_var.data - var, 2) + torch.norm(
+            module.running_mean.data - mean, 2)
+
+        self.r_feature = r_feature
+        # must have no output
+
+    def close(self):
+        self.hook.remove()
+
 class NAYER(BaseSynthesis):
 	def __init__(self, teacher, student, generator, num_classes, img_size,
 				 init_dataset=None, g_steps=100, lr_g=0.1,
@@ -102,6 +127,12 @@ class NAYER(BaseSynthesis):
 			self.coeff_l2 = coefficients["l2"]
 			self.main_loss_multiplier = coefficients["main_loss_multiplier"]
 			self.adi_scale = coefficients["adi_scale"]
+			
+			## Create hooks for feature statistics
+			self.loss_r_feature_layers = []
+			for module in self.net_teacher.modules():
+				if isinstance(module, nn.BatchNorm2d):
+					self.loss_r_feature_layers.append(DeepInversionFeatureHook(module))
 		else:
 			print("Dict. r_feature incompleto")
 			
@@ -264,7 +295,7 @@ class NAYER(BaseSynthesis):
 
 				loss_aux = 	self.coeff_var_l2 * loss_var_l2 + \
 							self.coeff_var_l1 * loss_var_l1 + \
-							self.coeff_feature * loss_r_feature + \
+							self.bn_reg_scale * loss_r_feature + \
 							self.coeff_l2 * loss_l2
 				#########################################################
 				loss = self.bn * loss_bn + self.oh * loss_oh + self.adv * loss_adv + loss_aux
