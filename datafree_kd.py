@@ -257,10 +257,10 @@ def main():
 
         if "decisionBoundary" in args.metrics:
             start_time = time.time()
-            plot_decision_boundary(teacher, dataset_location, output_path="./IMG/PCA/teacher_decision_boundary.png")
-            plot_decision_boundary(nayerStudent, dataset_location, output_path="./IMG/PCA/nayerStudent_decision_boundary.png")
-            plot_decision_boundary(scratchStudent, dataset_location, output_path="./IMG/PCA/scratchStudent_decision_boundary.png")
-            plot_decision_boundary(KDstudent, dataset_location, output_path="./IMG/PCA/KDstudent_decision_boundary.png")
+            plot_decision_boundary(teacher, dataset_location, output_path="./IMG/PCA/teacher_decision_boundary.png", print_tag="Teacher")
+            plot_decision_boundary(nayerStudent, dataset_location, output_path="./IMG/PCA/nayerStudent_decision_boundary.png", print_tag="NayerStudent")
+            plot_decision_boundary(scratchStudent, dataset_location, output_path="./IMG/PCA/scratchStudent_decision_boundary.png", print_tag="ScratchStudent")
+            plot_decision_boundary(KDstudent, dataset_location, output_path="./IMG/PCA/KDstudent_decision_boundary.png", print_tag="KDstudent")
 
             args.logger.info({"Decision Boundary - Elapsed Time": time.time() - start_time})
             wandb.log({

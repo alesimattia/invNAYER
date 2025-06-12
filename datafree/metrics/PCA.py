@@ -53,23 +53,19 @@ def model_PCA(model, components=3, print_tag="model", dataset_root='../CIFAR10',
     features_pca = pca.fit_transform(features)
     colors = plt.cm.get_cmap("tab10", len(dataset.classes))
 
-    if components == 2:
-        fig, ax = plt.subplots(figsize=(10, 8))
-        for class_idx in range(len(dataset.classes)):
-            class_points = features_pca[labels == class_idx]
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d') if components > 2 else ax
+    for class_idx in range(len(dataset.classes)):
+        class_points = features_pca[labels == class_idx]
+        if components < 3:
             ax.scatter(class_points[:, 0], class_points[:, 1], label=f'Class {class_idx}', alpha=0.7, s=20, c=[colors(class_idx)])
-        ax.set_xlabel("Component 1")
-        ax.set_ylabel("Component 2")
-    else:
-        fig = plt.figure(figsize=(10, 8))
-        ax = fig.add_subplot(111, projection='3d')
-        for class_idx in range(len(dataset.classes)):
-            class_points = features_pca[labels == class_idx]
+        else:
             ax.scatter(class_points[:, 0], class_points[:, 1], class_points[:, 2], label=dataset.classes[class_idx], alpha=0.7, s=20, c=[colors(class_idx)])
-        ax.set_title(f"PCA {components}D - {print_tag}")
-        ax.set_xlabel("Component 1")
-        ax.set_ylabel("Component 2")
+    ax.set_xlabel("Component 1")
+    ax.set_ylabel("Component 2")
+    if components > 2:
         ax.set_zlabel("Component 3")
+    ax.set_title(f"PCA {components}D - {print_tag} model")
     ax.legend(list(dataset.classes), loc="best", title="Classes")
 
 
@@ -78,16 +74,17 @@ def model_PCA(model, components=3, print_tag="model", dataset_root='../CIFAR10',
         print(f"PCA {components}D plot salvato in: {output_path}")
         plt.close(fig)
         return fig
-    return features_pca, labels, pca, list(dataset.classes)
+    return features_pca, labels, pca, dataset.classes
 
 
 
-def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num_workers=4, output_path="./IMG/PCA/decision_boundary.png"):
+def plot_decision_boundary(model, output_path="./IMG/PCA/decision_boundary.png", print_tag="model", dataset_root='../CIFAR10', batch_size=512, num_workers=4):
     """
         Calcola e visualizza i decision boundary delle predizioni del modello.
         - Le feature vengono ridotte a 2D tramite PCA.
     """
     from matplotlib.colors import ListedColormap
+    import matplotlib.patches as mpatches
 
     features_pca, labels, pca, class_names = model_PCA( model, components=2, dataset_root=dataset_root,
                                         batch_size=batch_size, num_workers=num_workers)
@@ -121,9 +118,10 @@ def plot_decision_boundary(model, dataset_root='../CIFAR10', batch_size=512, num
     plt.colorbar(contour, ax=ax, ticks=range(num_classes))
     ax.set_xlabel("PCA 1")
     ax.set_ylabel("PCA 2")
-    ax.set_title(f"Decision Boundary - {model.__class__.__name__}")
-    ax.legend(class_names, loc="best", title="Classes")
+    ax.set_title(f"Decision Boundary - {print_tag} model")
+    handles = [mpatches.Patch(color=colors[i], label=class_names[i]) for i in range(num_classes)]
+    ax.legend(handles=handles, loc="best", title="Classes")
 
     if output_path:
         plt.savefig(output_path)
-        print(f"DecisionBoundary salvato in: {output_path}")
+        print(f"DecisionBoundary salvato in: {output_path}") #DEBUG
