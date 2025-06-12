@@ -12,5 +12,4 @@
 #SBATCH --cpus-per-task=4
 python train_scratch.py --workers 4 --gpu 0 --batch-size 512 --lr 0.2  \
 	--epochs 100  --data_root ../ --model resnet18 --dataset cifar10  --seed 32 \
-	--metrics "Off" \
 	--footprint

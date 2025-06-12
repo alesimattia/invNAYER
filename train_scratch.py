@@ -1,8 +1,4 @@
-import argparse
-import os
-import random
-import time
-import warnings
+import argparse, os, random, time, warnings
 
 import torch
 import torch.nn as nn
@@ -13,6 +9,8 @@ import torch.optim
 import torch.multiprocessing as mp
 import torch.utils.data
 import torch.utils.data.distributed
+import wandb
+from codecarbon import OfflineEmissionsTracker
 
 import registry
 import datafree
@@ -43,7 +41,7 @@ parser.add_argument('--ver', default=1, type=int,
                     help='Version')
 parser.add_argument('--sche', default="cos", type=str,
                     help='Version')
-
+parser.add_argument('--footprint', default=False, action=argparse.BooleanOptionalAction, help='Addestra uno studente distillato con BCE+KL; richiede --nayer_student')
 
 
 # Device & FP16
@@ -83,6 +81,13 @@ parser.add_argument('--seed', default=None, type=int,
 best_acc1 = 0
 def main():
     args = parser.parse_args()
+    if args.footprint:
+        if os.path.exists("./emissions.csv"):
+            os.remove("./emissions.csv")  #delete old log
+        tracker = OfflineEmissionsTracker(country_iso_code="ITA", project_name="invNAYER")
+        tracker.start()
+        import pandas as pd
+
     if args.seed is not None:
         random.seed(args.seed)
         torch.manual_seed(args.seed)
@@ -110,6 +115,11 @@ def main():
         # Simply call main_worker function
         main_worker(args.gpu, ngpus_per_node, args)
 
+    if args.footprint:
+        emissions: float = tracker.stop()
+        emissions /= 1000
+        print(f"Emissioni di carbonio: {emissions:.6f} gCO2eq")
+        wandb.log({'Carbon emissions [gCO2eq]': emissions})
 
 def main_worker(gpu, ngpus_per_node, args):
     global best_acc1
