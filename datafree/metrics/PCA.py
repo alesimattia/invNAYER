@@ -78,7 +78,7 @@ def model_PCA(model, components=3, print_tag="model", dataset_root='../CIFAR10',
 
 
 
-def plot_decision_boundary(model, output_path="./IMG/PCA/decision_boundary.png", print_tag="model", dataset_root='../CIFAR10', batch_size=512, num_workers=4):
+def plot_decision_boundary(model, dataset_root='../CIFAR10', output_path="./IMG/PCA/decision_boundary.png", print_tag="model", batch_size=512, num_workers=4):
     """
         Calcola e visualizza i decision boundary delle predizioni del modello.
         - Le feature vengono ridotte a 2D tramite PCA.
