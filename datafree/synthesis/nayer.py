@@ -239,9 +239,9 @@ class NAYER(BaseSynthesis):
 					loss_contr = 0
 					t_out = self.teacher(inputs_aug)
 
-				loss_bn = sum([h.r_feature for h in self.hooks])
+				################### MODIFICA FUNZIONE DI LOSS #######################
 				loss_oh = custom_cross_entropy(t_out, ys.detach())
-
+				
 				if self.adv > 0 and (self.ep > self.ep_start):
 					s_out = self.student(inputs_aug)
 					mask = (s_out.max(1)[1] == t_out.max(1)[1]).float()
@@ -250,15 +250,25 @@ class NAYER(BaseSynthesis):
 				else:
 					loss_adv = loss_oh.new_zeros(1)
 
-				######### Calcolo componente "loss_aux" ########
-				loss_var_l1, loss_var_l2 = get_image_prior_losses(inputs_aug)
+				''' 
+					Calcolo loss_r_feature come in DeepInversion 
+					Elimina loss_bn
+				'''
+				rescale = [self.first_bn_multiplier] + [1. for _ in range(len(self.hooks)-1)]
+				loss_r_feature = sum([h.r_feature * rescale[idx] for idx, h in enumerate(self.hooks)])
+				loss_bn = 0
+
+				######### CALCOLO COMPONENTE "loss_aux" ########
+				loss_var_l1, loss_var_l2 = get_image_prior_losses(inputs_aug) # R_prior
 				loss_l2 = torch.norm(inputs_aug.view(inputs_aug.size(0), -1), dim=1).mean()
 
-				loss_aux = self.coeff_var_l1 * loss_var_l1 + self.coeff_var_l2 * loss_var_l2 + self.coeff_l2 * loss_l2
-				#################################################
+				loss_aux = 	self.coeff_var_l2 * loss_var_l2 + \
+							self.coeff_var_l1 * loss_var_l1 + \
+							self.coeff_feature * loss_r_feature + \
+							self.coeff_l2 * loss_l2
+				#########################################################
+				loss = self.bn * loss_bn + self.oh * loss_oh + self.adv * loss_adv + loss_aux
 
-				# Combina "loss_bn", "loss_oh", "loss_adv" e "loss_aux" 
-				loss = self.bn * loss_bn + self.oh * loss_oh + self.adv * loss_adv + self.contr * loss_contr + loss_aux
 
 				if loss_oh.item() < best_oh:
 					best_oh = loss_oh
