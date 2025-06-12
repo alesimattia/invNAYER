@@ -1,4 +1,4 @@
-def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel="X", ylabel="Y", xticks=[], width=0.8):
+def sideBy_barplot(save_path, *data_lists, labels=None, decimals=3, title="Barplot", xlabel="X", ylabel="Y", xticks=[], width=0.8):
     """Add commentMore actions
 	Salva in .png barplot con più liste di dati in ingresso. In tal caso le barre sono affiancate.
 	
@@ -37,7 +37,7 @@ def sideBy_barplot(save_path, *data_lists, labels=None, title="Barplot", xlabel=
         for bar, val in zip(bars, data):
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{val:.3f}', ha='center', va='bottom', rotation=45)
+                    'val:.%df' % decimals, ha='center', va='bottom', rotation=45)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)

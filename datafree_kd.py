@@ -338,13 +338,13 @@ def main():
                 'Prediction Distance vs. Teacher (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_teacher-students.png",
                                                                                 teacher_nayerStud_dst, teacher_scratchStud_dst, teacher_KDstud_dst,
                                                                                 xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                                title="Prediction Distance (per class)", 
+                                                                                title="Prediction Distance (per class)", decimals=2,
                                                                                 labels=["Teacher/NayerStudent", "Teacher/ScratchStudent", "Teacher/KDstudent"]
                                                                             )),
                 'Prediction Distance - Students (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_all_students.png",
                                                                                 scratchStudent_nayerStudent_dst, KDstud_nayerStudent_dst, KDstud_scratchStudent_dst,
                                                                                 xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                                title="Prediction Distance - Students (per class)", 
+                                                                                title="Prediction Distance - Students (per class)", decimals=2,
                                                                                 labels=["ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                             ))
             })
@@ -392,8 +392,9 @@ def main():
     #result = subprocess.run([f"wandb sync {wandb.run.dir}/.."], shell=True, capture_output=True, text=True) #rimuove "/files" dal path
     #print(result.stdout)
     if args.footprint:
-        emissions = float(tracker.stop()) / 1000
-        print(f"Grammi di carbonio prodotti: {emissions:.6f} kgCO2eq")
+        emissions: float = tracker.stop()
+        emissions /= 1000
+        print(f"Emissioni di carbonio: {emissions:.6f} gCO2eq")
         wandb.log({'Codecarbon Log': wandb.Table(dataframe=pd.read_csv("./emissions.csv"))})
 
 
