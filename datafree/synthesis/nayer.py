@@ -287,7 +287,7 @@ class NAYER(BaseSynthesis):
 				'''
 				rescale = [self.first_bn_multiplier] + [1. for _ in range(len(self.hooks)-1)]
 				loss_r_feature = sum([h.r_feature * rescale[idx] for idx, h in enumerate(self.hooks)])
-				loss_bn = 0
+				loss_bn = sum([h.r_feature for h in self.hooks])
 
 				######### CALCOLO COMPONENTE "loss_aux" ########
 				loss_var_l1, loss_var_l2 = get_image_prior_losses(inputs_aug) # R_prior
