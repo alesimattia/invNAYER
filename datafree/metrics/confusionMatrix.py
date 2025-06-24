@@ -6,7 +6,7 @@ from sklearn.metrics import confusion_matrix
 import numpy as np
 
 
-def compute_confusion_matrix(model, dataset_root, output_path="./CM.png", batch_size=512, num_workers=4):
+def compute_confusion_matrix(model, dataset_root, print_tag="model", output_path="./CM.png", batch_size=512, num_workers=4):
     '''
     Returns: grafico matplotlib della matrice di confusione tra le predizioni del modello e le etichette reali del dataset.
 	'''
@@ -55,8 +55,9 @@ def compute_confusion_matrix(model, dataset_root, output_path="./CM.png", batch_
     )
     plt.setp(ax.get_xticklabels(), rotation=30, ha="right", rotation_mode="anchor")
     plt.setp(ax.get_yticklabels(), rotation=30, ha="right", rotation_mode="anchor")
+    plt.title(f'Confusion Matrix - {print_tag}')
+
     thresh = cm.max() / 2.
-    
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
             ax.text(j, i, format(cm[i, j], 'd'),

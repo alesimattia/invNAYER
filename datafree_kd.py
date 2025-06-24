@@ -297,13 +297,13 @@ def main():
 
         if "confusionMatrix" in args.metrics:
             start_time = time.time()
-            compute_confusion_matrix(teacher, dataset_location, batch_size=args.batch_size,
+            compute_confusion_matrix(teacher, dataset_location, print_tag="Teacher", batch_size=args.batch_size,
                             output_path='./IMG/confusion/teacher_confusion_matrix.png')
-            compute_confusion_matrix(nayerStudent, dataset_location, batch_size=args.batch_size,
+            compute_confusion_matrix(nayerStudent, dataset_location, print_tag="NAYER Student", batch_size=args.batch_size,
                             output_path='./IMG/confusion/nayerStudent_confusion_matrix.png')
-            compute_confusion_matrix(scratchStudent, dataset_location, batch_size=args.batch_size,
+            compute_confusion_matrix(scratchStudent, dataset_location, print_tag="Scratch Student", batch_size=args.batch_size,
                             output_path='./IMG/confusion/scratchStudent_confusion_matrix.png')
-            compute_confusion_matrix(KDstudent, dataset_location, batch_size=args.batch_size,
+            compute_confusion_matrix(KDstudent, dataset_location, print_tag="KD Student", batch_size=args.batch_size,
                             output_path='./IMG/confusion/KDstudent_confusion_matrix.png')
 
             args.logger.info({"Confusion Matrix - Elapsed Time": time.time() - start_time})
