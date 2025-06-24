@@ -5,8 +5,8 @@
 #SBATCH --gres=gpu:1
 #SBATCH --partition=boost_usr_prod   # partition name
 #SBATCH --time=4:00:00               # time limits: 1 hour
-#SBATCH --error=err/Train_scratch.err            # standard error file
-#SBATCH --output=log/Train_scratch.log           # standard output file
+#SBATCH --error=err/Train_scratch_new.err            # standard error file
+#SBATCH --output=log/Train_scratch_new.log           # standard output file
 #SBATCH --account=IscrC_MACRO        # account name
 #SBATCH --verbose
 #SBATCH --cpus-per-task=4
