@@ -166,7 +166,7 @@ def main():
     if args.footprint:
         if os.path.isfile("./emissions.csv"):
             os.remove("./emissions.csv")  #delete old log
-        tracker = OfflineEmissionsTracker(country_iso_code="ITA", project_name="invNAYER")
+        tracker = OfflineEmissionsTracker(country_iso_code="ITA", log_level = "CRITICAL", project_name="invNAYER")
         tracker.start()
         import pandas as pd
 
