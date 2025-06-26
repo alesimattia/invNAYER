@@ -397,7 +397,7 @@ def main():
     #print(result.stdout)
     if args.footprint:
         emissions: float = tracker.stop()
-        emissions /= 1000
+        emissions /= 1000 # Era *1000 per ottenere i grammi => non corretto per coerenza su wandb
         print(f"Emissioni di carbonio: {emissions:.6f} gCO2eq")
         wandb.log({'Carbon emissions [gCO2eq]': emissions})
 
