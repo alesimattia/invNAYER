@@ -14,7 +14,7 @@ python3 datafree_kd.py --workers 4 --gpu 0 --batch_size 512 --synthesis_batch_si
  --epochs 1 --dataset cifar10 --method nayer --lr_g 4e-3 --teacher resnet34 --student resnet18 \
  --save_dir run/ --adv 1.33 --bn 10.0 --oh 0.5 --g_steps 30 --g_life 10 --g_loops 2 --gwp_loops 10 \
  --contr 0 --log_tag Comparator --seed 32 \
- --nayer_student c10r34r18-tvL2-0.0002__l2-0.00001 \
+ --nayer_student c10r34r18-tvL2-0.0002__l2-0 \
  --scratch_student cifar10_resnet18_100ep \
  --KD_student KD_student_alpha02 \
  --footprint
