@@ -342,13 +342,13 @@ def main():
                 'Prediction Distance vs. Teacher (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_teacher-students.png",
                                                                                 teacher_nayerStud_dst, teacher_scratchStud_dst, teacher_KDstud_dst,
                                                                                 xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                                title="Prediction Distance (per class)", decimals=2,
+                                                                                title="Prediction Distance (per class)",
                                                                                 labels=["Teacher/NayerStudent", "Teacher/ScratchStudent", "Teacher/KDstudent"]
                                                                             )),
                 'Prediction Distance - Students (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_all_students.png",
                                                                                 scratchStudent_nayerStudent_dst, KDstud_nayerStudent_dst, KDstud_scratchStudent_dst,
                                                                                 xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                                title="Prediction Distance - Students (per class)", decimals=2,
+                                                                                title="Prediction Distance - Students (per class)",
                                                                                 labels=["ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                             ))
             })
