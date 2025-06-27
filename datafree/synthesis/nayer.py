@@ -286,19 +286,19 @@ class NAYER(BaseSynthesis):
 					Elimina loss_bn
 				'''
 				rescale = [self.first_bn_multiplier] + [1. for _ in range(len(self.hooks)-1)]
-				loss_r_feature = sum([h.r_feature * rescale[idx] for idx, h in enumerate(self.hooks)])
 				loss_bn = sum([h.r_feature for h in self.hooks])
 
 				######### CALCOLO COMPONENTE "loss_aux" ########
 				loss_var_l1, loss_var_l2 = get_image_prior_losses(inputs_aug) # R_prior
 				loss_l2 = torch.norm(inputs_aug.view(inputs_aug.size(0), -1), dim=1).mean()
 
-				loss_aux = 	self.coeff_var_l2 * loss_var_l2 + \
-							self.coeff_var_l1 * loss_var_l1 + \
-							self.bn_reg_scale * loss_r_feature + \
-							self.coeff_l2 * loss_l2
+				loss_prior = 	self.coeff_var_l2 * loss_var_l2 + \
+								self.coeff_var_l1 * loss_var_l1 + \
+								self.coeff_l2 * loss_l2
+				loss_r_feature = self.bn_reg_scale * (sum([h.r_feature * rescale[idx] for idx, h in enumerate(self.hooks)]))
 				#########################################################
-				loss = self.bn * loss_bn + self.oh * loss_oh + self.adv * loss_adv + loss_aux
+				loss = self.bn * loss_bn + self.oh * loss_oh + self.adv * loss_adv \
+						+ loss_prior + loss_r_feature
 
 
 				if loss_oh.item() < best_oh:
