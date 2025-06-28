@@ -37,9 +37,9 @@ parser.add_argument('--first_bn_multiplier', type=float, default=10., help='addi
 parser.add_argument('--main_loss_multiplier', type=float, default=1.0, help='coefficient for the main loss in optimization')
 parser.add_argument('--adi_scale', type=float, default=0.0, help='Coefficient for Adaptive Deep Inversion')
 # Metriche
-parser.add_argument('--metrics', nargs='+', help='Lista delle metriche da calcolare: PCA, TSNE, distance, DICE, confusionMatrix, JSindex', 
-                    default=["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"], 
-                    choices=["Off", "PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"])
+parser.add_argument('--metrics', nargs='+', help='Lista delle metriche da calcolare: PCA, TSNE, similarity, DICE, confusionMatrix, JSindex', 
+                    default=["PCA", "TSNE", "similarity", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"], 
+                    choices=["Off", "PCA", "TSNE", "similarity", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"])
 # Modelli preaddestrati
 parser.add_argument('--nayer_student', type=str, default="best_c10r34r18-tvL2-0.0005__l2-0.00001", 
                     help='Path modello .pth preaddestrato con NAYER classico; per fare poi train di KD_student')
@@ -217,7 +217,7 @@ def main():
     ############################################
     # VALUTAZIONE MODELLI
     ############################################
-    if any(m in args.metrics for m in ["PCA", "TSNE", "distance", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"]):
+    if any(m in args.metrics for m in ["PCA", "TSNE", "similarity", "DICE", "confusionMatrix", "JSindex", "decisionBoundary"]):
         num_classes, _, _ = registry.get_dataset(name=args.dataset, data_root=args.data_root)
         dataset_location = os.path.join(os.path.dirname(__file__), '../', args.dataset.upper())
 
@@ -328,27 +328,27 @@ def main():
         scratchStud_nayerStud_Comparator = Comparator(scratchStudent, nayerStudent, dataset_location, args.batch_size, args.workers)
         KDstud_scratchStud_Comparator = Comparator(KDstudent, scratchStudent, dataset_location, args.batch_size, args.workers)
 
-        if "distance" in args.metrics: 
+        if "similarity" in args.metrics: 
             start_time = time.time()
-            teacher_nayerStud_dst = list(map(lambda x: (1-x)*100, teacher_nayerStud_Comparator.prediction_distance().values()))
-            teacher_scratchStud_dst = list(map(lambda x: (1-x)*100, teacher_scratchStud_Comparator.prediction_distance().values()))
-            teacher_KDstud_dst = list(map(lambda x: (1-x)*100, teacher_KDstud_Comparator.prediction_distance().values()))
-            scratchStudent_nayerStudent_dst = list(map(lambda x: (1-x)*100, scratchStud_nayerStud_Comparator.prediction_distance().values()))
-            KDstud_nayerStudent_dst = list(map(lambda x: (1-x)*100, KDstud_nayerStud_Comparator.prediction_distance().values()))
-            KDstud_scratchStudent_dst = list(map(lambda x: (1-x)*100, KDstud_scratchStud_Comparator.prediction_distance().values()))
+            teacher_nayerStud_dst = list(map(lambda x: (x)*100, teacher_nayerStud_Comparator.prediction_similarity().values()))
+            teacher_scratchStud_dst = list(map(lambda x: (x)*100, teacher_scratchStud_Comparator.prediction_similarity().values()))
+            teacher_KDstud_dst = list(map(lambda x: (x)*100, teacher_KDstud_Comparator.prediction_similarity().values()))
+            scratchStudent_nayerStudent_dst = list(map(lambda x: (x)*100, scratchStud_nayerStud_Comparator.prediction_similarity().values()))
+            KDstud_nayerStudent_dst = list(map(lambda x: (x)*100, KDstud_nayerStud_Comparator.prediction_similarity().values()))
+            KDstud_scratchStudent_dst = list(map(lambda x: (x)*100, KDstud_scratchStud_Comparator.prediction_similarity().values()))
 
-            args.logger.info(f"Prediction Distance - Elapsed Time: {time.time() - start_time}")
+            args.logger.info(f"Prediction similarity - Elapsed Time: {time.time() - start_time}")
             wandb.log({ 
-                'Prediction Distance vs. Teacher (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_teacher-students.png",
+                'Prediction similarity vs. Teacher (per class)': wandb.Image( sideBy_barplot(f"./IMG/similarity/{args.log_tag}_teacher-students.png",
                                                                                 teacher_nayerStud_dst, teacher_scratchStud_dst, teacher_KDstud_dst,
                                                                                 xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                                title="Prediction Distance (per class)",
+                                                                                title="Prediction similarity (per class)",
                                                                                 labels=["Teacher/NayerStudent", "Teacher/ScratchStudent", "Teacher/KDstudent"]
                                                                             )),
-                'Prediction Distance - Students (per class)': wandb.Image( sideBy_barplot(f"./IMG/distance/{args.log_tag}_all_students.png",
+                'Prediction similarity - Students (per class)': wandb.Image( sideBy_barplot(f"./IMG/similarity/{args.log_tag}_all_students.png",
                                                                                 scratchStudent_nayerStudent_dst, KDstud_nayerStudent_dst, KDstud_scratchStudent_dst,
                                                                                 xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                                title="Prediction Distance - Students (per class)",
+                                                                                title="Prediction similarity - Students (per class)",
                                                                                 labels=["ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                             ))
             })

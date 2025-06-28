@@ -36,7 +36,7 @@ class Comparator:
         
 
 
-    def prediction_distance(self, frob=False):
+    def prediction_similarity(self, frob=False):
         """
         Calcola la distanza tra le predizioni di due modelli, per ogni classe.
         
