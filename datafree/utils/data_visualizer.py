@@ -37,13 +37,13 @@ def sideBy_barplot(save_path, *data_lists, labels=None, decimals=2, title="Barpl
         for bar, val in zip(bars, data):
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height,
-                    f'{val:.{decimals}f}', ha='center', va='bottom', rotation=45, fontsize=8)
+                    f'{val:.{decimals}f}', ha='center', va='bottom', rotation=60, fontsize=10)
 
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_title(title)
     ax.set_xticks(x, labels=xticks)
-    ax.legend(loc='best')
+    ax.legend(loc='lower center')
 
     plt.tight_layout()
     plt.savefig(save_path, bbox_inches='tight')
