@@ -330,25 +330,25 @@ def main():
 
         if "similarity" in args.metrics: 
             start_time = time.time()
-            teacher_nayerStud_dst = list(map(lambda x: (x)*100, teacher_nayerStud_Comparator.prediction_similarity().values()))
-            teacher_scratchStud_dst = list(map(lambda x: (x)*100, teacher_scratchStud_Comparator.prediction_similarity().values()))
-            teacher_KDstud_dst = list(map(lambda x: (x)*100, teacher_KDstud_Comparator.prediction_similarity().values()))
-            scratchStudent_nayerStudent_dst = list(map(lambda x: (x)*100, scratchStud_nayerStud_Comparator.prediction_similarity().values()))
-            KDstud_nayerStudent_dst = list(map(lambda x: (x)*100, KDstud_nayerStud_Comparator.prediction_similarity().values()))
-            KDstud_scratchStudent_dst = list(map(lambda x: (x)*100, KDstud_scratchStud_Comparator.prediction_similarity().values()))
+            teacher_nayerStud_diss = list(map(lambda x: (1-x)*100, teacher_nayerStud_Comparator.prediction_similarity().values()))
+            teacher_scratchStud_diss = list(map(lambda x: (1-x)*100, teacher_scratchStud_Comparator.prediction_similarity().values()))
+            teacher_KDstud_diss = list(map(lambda x: (1-x)*100, teacher_KDstud_Comparator.prediction_similarity().values()))
+            scratchStudent_nayerStudent_diss = list(map(lambda x: (1-x)*100, scratchStud_nayerStud_Comparator.prediction_similarity().values()))
+            KDstud_nayerStudent_diss = list(map(lambda x: (1-x)*100, KDstud_nayerStud_Comparator.prediction_similarity().values()))
+            KDstud_scratchStudent_diss = list(map(lambda x: (1-x)*100, KDstud_scratchStud_Comparator.prediction_similarity().values()))
 
-            args.logger.info(f"Prediction similarity - Elapsed Time: {time.time() - start_time}")
+            args.logger.info(f"Prediction Dissimilarity - Elapsed Time: {time.time() - start_time}")
             wandb.log({ 
-                'Prediction similarity vs. Teacher (per class)': wandb.Image( sideBy_barplot(f"./IMG/similarity/{args.log_tag}_teacher-students.png",
-                                                                                teacher_nayerStud_dst, teacher_scratchStud_dst, teacher_KDstud_dst,
-                                                                                xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                                title="Prediction similarity (per class)",
+                'Prediction Dissimilarity vs. Teacher (per class)': wandb.Image( sideBy_barplot(f"./IMG/similarity/{args.log_tag}_teacher-students.png",
+                                                                                teacher_nayerStud_diss, teacher_scratchStud_diss, teacher_KDstud_diss,
+                                                                                xlabel="Class", ylabel="Cosine Dissimilarity (%)", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
+                                                                                title="Prediction Dissimilarity (per class)", rotation=60,
                                                                                 labels=["Teacher/NayerStudent", "Teacher/ScratchStudent", "Teacher/KDstudent"]
                                                                             )),
-                'Prediction similarity - Students (per class)': wandb.Image( sideBy_barplot(f"./IMG/similarity/{args.log_tag}_all_students.png",
-                                                                                scratchStudent_nayerStudent_dst, KDstud_nayerStudent_dst, KDstud_scratchStudent_dst,
-                                                                                xlabel="Class", ylabel="Cosine Similarity %", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                                title="Prediction similarity - Students (per class)",
+                'Prediction Dissimilarity among Students (per class)': wandb.Image( sideBy_barplot(f"./IMG/similarity/{args.log_tag}_all_students.png",
+                                                                                scratchStudent_nayerStudent_diss, KDstud_nayerStudent_diss, KDstud_scratchStudent_diss,
+                                                                                xlabel="Class", ylabel="Cosine Dissimilarity (%)", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
+                                                                                title="Prediction Dissimilarity - Students (per class)", rotation=60,
                                                                                 labels=["ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                             ))
             })
@@ -367,7 +367,7 @@ def main():
                                                                         DICE_teacher_nayerS.values(), DICE_scratch_nayerS.values(), 
                                                                         DICE_KDstud_nayerS.values(), DICE_KDstud_scratchS.values(),
                                                                         xlabel="Classe", ylabel="Score", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                        title="DICE Score (per class)", 
+                                                                        title="DICE Score (per class)", location="bottom center", rotation=45,
                                                                         labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                     ))
             })
@@ -385,7 +385,7 @@ def main():
                 'Jensen-Shannon Index (per class)': wandb.Image(sideBy_barplot( f"./IMG/JS/{args.log_tag}.png", 
                                                                         teacher_nayerStud_JS.values(), scratchStud_nayerStud_JS.values(), 
                                                                         KDstud_nayerStud_JS.values(), KDstud_scratchStud_JS.values(), xlabel="Classe", ylabel="JS Index", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                        title="Jensen-Shannon Index (per class)", 
+                                                                        title="Jensen-Shannon Index (per class)", rotation=45,
                                                                         labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                 ))
             })
