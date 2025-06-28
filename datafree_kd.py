@@ -367,7 +367,7 @@ def main():
                                                                         DICE_teacher_nayerS.values(), DICE_scratch_nayerS.values(), 
                                                                         DICE_KDstud_nayerS.values(), DICE_KDstud_scratchS.values(),
                                                                         xlabel="Classe", ylabel="Score", xticks=list(teacher_nayerStud_Comparator.test_dataset.classes),
-                                                                        title="DICE Score (per class)", location="bottom center", rotation=45,
+                                                                        title="DICE Score (per class)", location="lower center", rotation=45,
                                                                         labels=["Teacher/NayerStudent", "ScratchStudent/NayerStudent", "KDStudent/NayerStudent", "KDStudent/ScratchStudent"]
                                                                     ))
             })
