@@ -1,7 +1,8 @@
 wandb/
 artifact/
-output.log
 wandb-metadata.json
 config.yaml
 copy_wandb_run.py
 .DS_Store
+__pycache__
+*.log
